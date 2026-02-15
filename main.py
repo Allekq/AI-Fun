@@ -1,7 +1,7 @@
 import argparse
 import asyncio
 
-from src.commands import ask
+from src.commands import ask, chat_cli
 
 
 def parse_args():
@@ -10,9 +10,11 @@ def parse_args():
 
     ask_parser = subparsers.add_parser("ask", help="Ask a question to the LLM")
     ask_parser.add_argument("question", type=str, help="The question to ask")
-    ask_parser.add_argument(
-        "--model", "-m", type=str, default="qwen3:8b", help="Model to use"
-    )
+    ask_parser.add_argument("--model", "-m", type=str, default="qwen3:8b", help="Model to use")
+
+    chat_parser = subparsers.add_parser("chat", help="Start an interactive chat")
+    chat_parser.add_argument("--model", "-m", type=str, default="qwen3:8b", help="Model to use")
+    chat_parser.add_argument("--system", "-s", type=str, default=None, help="System prompt")
 
     return parser.parse_args()
 
@@ -22,6 +24,8 @@ def main():
 
     if args.command == "ask":
         asyncio.run(ask(args.question, args.model))
+    elif args.command == "chat":
+        asyncio.run(chat_cli(args.model, args.system))
     else:
         print(f"Unknown command: {args.command}")
 

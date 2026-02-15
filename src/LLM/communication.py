@@ -1,13 +1,29 @@
-import asyncio
+from .chat import chat
+from .chat_response import ChatResponse
+from .constants import (
+    DEFAULT_FREQUENCY_PENALTY,
+    DEFAULT_NUM_PREDICT,
+    DEFAULT_PRESENCE_PENALTY,
+    DEFAULT_STREAM,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_TOP_K,
+    DEFAULT_TOP_P,
+    OllamaModels,
+)
+from .messages import AssistantMessage, HumanMessage, SystemMessage
 
-import ollama
-
-
-async def query(prompt: str, model: str = "qwen3:8b") -> str:
-    """Send a prompt to Ollama and return the response."""
-    response = await asyncio.to_thread(
-        ollama.chat,
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return response.message.content
+__all__ = [
+    "chat",
+    "ChatResponse",
+    "OllamaModels",
+    "HumanMessage",
+    "AssistantMessage",
+    "SystemMessage",
+    "DEFAULT_TEMPERATURE",
+    "DEFAULT_TOP_P",
+    "DEFAULT_TOP_K",
+    "DEFAULT_NUM_PREDICT",
+    "DEFAULT_FREQUENCY_PENALTY",
+    "DEFAULT_PRESENCE_PENALTY",
+    "DEFAULT_STREAM",
+]
