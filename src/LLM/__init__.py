@@ -8,15 +8,16 @@ from .constants import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
-    OllamaModels,
 )
 from .messages import AssistantMessage, BaseMessage, HumanMessage, SystemMessage
+from .models import OllamaModels, get_model
 from .tools import Tool, ToolCall
 
 __all__ = [
     "chat",
     "ChatResponse",
     "OllamaModels",
+    "get_model",
     "BaseMessage",
     "HumanMessage",
     "AssistantMessage",

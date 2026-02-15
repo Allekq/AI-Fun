@@ -8,8 +8,8 @@ from .constants import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
-    OllamaModels,
 )
+from .models import OllamaModels
 from .messages import AssistantMessage, HumanMessage, SystemMessage
 
 __all__ = [

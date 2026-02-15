@@ -12,8 +12,8 @@ from .constants import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
-    OllamaModels,
 )
+from .models import OllamaModels
 from .message_transformation import transform_messages, validate_messages
 from .messages import BaseMessage
 from .tools import Tool

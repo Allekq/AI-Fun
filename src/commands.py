@@ -1,23 +1,17 @@
-from src.LLM.communication import OllamaModels, chat, HumanMessage, SystemMessage
+from src.LLM.communication import chat, HumanMessage, SystemMessage
 from src.LLM.messages import AssistantMessage, BaseMessage
+from src.LLM.models import get_model, OllamaModels
 
 
 async def ask(question: str, model_name: str = "qwen3:8b") -> None:
-    model = _get_model(model_name)
+    model = get_model(model_name)
     messages: list[BaseMessage] = [HumanMessage(content=question)]
     response = await chat(model=model, messages=messages)
     print(response.content)
 
 
-def _get_model(model_name: str) -> OllamaModels:
-    for m in OllamaModels:
-        if m.to_ollama_name() == model_name:
-            return m
-    return OllamaModels.QWEN_8B
-
-
 async def chat_cli(model_name: str = "qwen3:8b", system_prompt: str | None = None) -> None:
-    model = _get_model(model_name)
+    model = get_model(model_name)
     conversation: list[BaseMessage] = []
 
     if system_prompt:
