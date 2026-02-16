@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
 import ollama
 
@@ -8,14 +8,13 @@ from .constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
     DEFAULT_PRESENCE_PENALTY,
-    DEFAULT_STREAM,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
 )
-from .models import OllamaModels
 from .message_transformation import transform_messages, validate_messages
 from .messages import BaseMessage
+from .models import OllamaModels
 from .tools import Tool
 
 
@@ -94,13 +93,18 @@ async def _chat_non_stream(
     options: _OllamaOptions,
     tools: list[dict[str, Any]] | None,
 ) -> dict[str, Any]:
-    return await asyncio.to_thread(
-        ollama.chat,
-        model=model,
-        messages=messages,
-        options=options,
-        tools=tools,
-    )
+    def _call_ollama() -> dict[str, Any]:
+        return cast(
+            dict[str, Any],
+            ollama.chat(
+                model=model,
+                messages=messages,
+                options=options,
+                tools=tools,
+            ),
+        )
+
+    return await asyncio.to_thread(_call_ollama)
 
 
 async def chat(
@@ -113,7 +117,6 @@ async def chat(
     frequency_penalty: float = DEFAULT_FREQUENCY_PENALTY,
     presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
     seed: int | None = None,
-    stream: bool = DEFAULT_STREAM,
     tools: list[Tool] | None = None,
 ) -> ChatResponse:
     validate_messages(messages)

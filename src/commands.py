@@ -1,6 +1,6 @@
-from src.LLM.communication import chat, HumanMessage, SystemMessage
+from src.LLM import HumanMessage, SystemMessage, chat
 from src.LLM.messages import AssistantMessage, BaseMessage
-from src.LLM.models import get_model, OllamaModels
+from src.LLM.models import get_model
 
 
 async def ask(question: str, model_name: str = "qwen3:8b") -> None:

@@ -1,4 +1,12 @@
-from .messages import AssistantMessage, BaseMessage, HumanMessage, SystemMessage
+from typing import TypedDict
+
+from .messages import BaseMessage
+
+
+class _OllamaMessage(TypedDict):
+    role: str
+    content: str
+    name: str | None
 
 
 def validate_message(message: BaseMessage) -> None:
@@ -19,15 +27,14 @@ def validate_messages(messages: list[BaseMessage]) -> None:
         validate_message(msg)
 
 
-def transform_message(message: BaseMessage) -> dict:
-    result = {
+def transform_message(message: BaseMessage) -> _OllamaMessage:
+    result: _OllamaMessage = {
         "role": message.role,
         "content": message.content,
+        "name": message.name,
     }
-    if message.name is not None:
-        result["name"] = message.name
     return result
 
 
-def transform_messages(messages: list[BaseMessage]) -> list[dict]:
+def transform_messages(messages: list[BaseMessage]) -> list[_OllamaMessage]:
     return [transform_message(msg) for msg in messages]
