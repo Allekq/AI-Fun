@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any
+from typing import Any, TypedDict
 
 import ollama
 
@@ -19,6 +19,22 @@ from .messages import BaseMessage
 from .tools import Tool
 
 
+class _OllamaMessage(TypedDict):
+    role: str
+    content: str
+    name: str | None
+
+
+class _OllamaOptions(TypedDict, total=False):
+    temperature: float
+    top_p: float
+    top_k: int
+    num_predict: int
+    frequency_penalty: float
+    presence_penalty: float
+    seed: int
+
+
 def _build_options(
     temperature: float,
     top_p: float,
@@ -27,8 +43,8 @@ def _build_options(
     frequency_penalty: float,
     presence_penalty: float,
     seed: int | None,
-) -> dict[str, Any]:
-    options = {
+) -> _OllamaOptions:
+    options: _OllamaOptions = {
         "temperature": temperature,
         "top_p": top_p,
         "top_k": top_k,
@@ -72,6 +88,21 @@ def _to_chat_response(response: dict[str, Any]) -> ChatResponse:
     )
 
 
+async def _chat_non_stream(
+    model: str,
+    messages: list[_OllamaMessage],
+    options: _OllamaOptions,
+    tools: list[dict[str, Any]] | None,
+) -> dict[str, Any]:
+    return await asyncio.to_thread(
+        ollama.chat,
+        model=model,
+        messages=messages,
+        options=options,
+        tools=tools,
+    )
+
+
 async def chat(
     model: OllamaModels,
     messages: list[BaseMessage],
@@ -98,14 +129,13 @@ async def chat(
     )
 
     ollama_tools = _build_tools(tools)
+    ollama_messages = transform_messages(messages)
 
-    response: dict[str, Any] = await asyncio.to_thread(
-        ollama.chat,
+    response = await _chat_non_stream(
         model=model.to_ollama_name(),
-        messages=transform_messages(messages),
+        messages=ollama_messages,
         options=options,
-        stream=stream,  # type: ignore[arg-type]
         tools=ollama_tools,
     )
 
-    return _to_chat_response(response)  # type: ignore[arg-type]
+    return _to_chat_response(response)
