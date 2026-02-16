@@ -1,4 +1,4 @@
-from .chat import chat
+from .chat import chat_non_stream, chat_stream
 from .chat_response import ChatResponse
 from .constants import (
     DEFAULT_FREQUENCY_PENALTY,
@@ -13,7 +13,8 @@ from .models import OllamaModels, get_model
 from .tools import Tool, ToolCall
 
 __all__ = [
-    "chat",
+    "chat_non_stream",
+    "chat_stream",
     "ChatResponse",
     "OllamaModels",
     "get_model",

@@ -15,3 +15,4 @@ class ChatResponse:
     eval_count: int | None = None
     context: list[int] | None = None
     tool_calls: list[ToolCall] | None = None
+    thinking: str | None = None

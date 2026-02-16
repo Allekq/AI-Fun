@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from .messages import BaseMessage
 
@@ -27,8 +27,8 @@ def validate_messages(messages: list[BaseMessage]) -> None:
         validate_message(msg)
 
 
-def transform_message(message: BaseMessage) -> _OllamaMessage:
-    result: _OllamaMessage = {
+def transform_message(message: BaseMessage) -> dict[str, Any]:
+    result: dict[str, Any] = {
         "role": message.role,
         "content": message.content,
         "name": message.name,
@@ -36,5 +36,5 @@ def transform_message(message: BaseMessage) -> _OllamaMessage:
     return result
 
 
-def transform_messages(messages: list[BaseMessage]) -> list[_OllamaMessage]:
+def transform_messages(messages: list[BaseMessage]) -> list[dict[str, Any]]:
     return [transform_message(msg) for msg in messages]

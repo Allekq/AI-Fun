@@ -1,4 +1,5 @@
-from src.LLM import HumanMessage, SystemMessage, chat
+from src.LLM import HumanMessage, SystemMessage, chat_non_stream, chat_stream
+from src.LLM.chat_response import ChatResponse
 from src.LLM.messages import AssistantMessage, BaseMessage
 from src.LLM.models import get_model
 
@@ -6,11 +7,23 @@ from src.LLM.models import get_model
 async def ask(question: str, model_name: str = "qwen3:8b") -> None:
     model = get_model(model_name)
     messages: list[BaseMessage] = [HumanMessage(content=question)]
-    response = await chat(model=model, messages=messages)
+    response = await chat_non_stream(model=model, messages=messages)
     print(response.content)
 
 
-async def chat_cli(model_name: str = "qwen3:8b", system_prompt: str | None = None) -> None:
+def log_streamed_response(response: ChatResponse, in_thinking: bool) -> None:
+    if response.thinking and not in_thinking:
+        print("\n[Thinking...]\n", end="", flush=True)
+        print(response.thinking, end="", flush=True)
+    elif response.content:
+        if in_thinking:
+            print("\n\n", end="", flush=True)
+        print(response.content, end="", flush=True)
+
+
+async def chat_cli(
+    model_name: str = "qwen3:8b", system_prompt: str | None = None, stream: bool = False
+) -> None:
     model = get_model(model_name)
     conversation: list[BaseMessage] = []
 
@@ -32,9 +45,32 @@ async def chat_cli(model_name: str = "qwen3:8b", system_prompt: str | None = Non
         conversation.append(HumanMessage(content=user_input))
 
         try:
-            response = await chat(model=model, messages=conversation)
-            print(f"AI: {response.content}\n")
-            conversation.append(AssistantMessage(content=response.content))
+            if stream:
+                print("AI: ", end="", flush=True)
+                accumulated_content = ""
+                accumulated_thinking = ""
+                in_thinking = False
+                async for response in chat_stream(model=model, messages=conversation):
+                    if response.thinking:
+                        if not in_thinking:
+                            in_thinking = True
+                            print("\n[Thinking...]\n", end="", flush=True)
+                        print(response.thinking, end="", flush=True)
+                        accumulated_thinking += response.thinking
+                    if response.content:
+                        if in_thinking:
+                            print("\n\n", end="", flush=True)
+                            in_thinking = False
+                        print(response.content, end="", flush=True)
+                        accumulated_content += response.content
+                    if response.done:
+                        print("\n")
+                        conversation.append(AssistantMessage(content=accumulated_content))
+            else:
+                response = await chat_non_stream(model=model, messages=conversation)
+                print(f"AI: {response.content}\n")
+                conversation.append(AssistantMessage(content=response.content))
         except Exception as e:
             print(f"Error: {e}\n")
-            conversation.pop()
+            if not stream:
+                conversation.pop()
