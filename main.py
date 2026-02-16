@@ -1,7 +1,7 @@
 import argparse
 import asyncio
 
-from src.commands import ask, chat_cli
+from src.commands import ask, chat_cli, handle_image_gen
 
 
 def parse_args():
@@ -48,6 +48,14 @@ def parse_args():
         "-nt", "--no-think", dest="think", action="store_false", help="Disable thinking"
     )
 
+    img_parser = subparsers.add_parser("img", help="Generate an image")
+    img_parser.add_argument("prompt", type=str, help="The image prompt")
+    img_parser.add_argument("-m", "--model", type=str, default="x/flux2-klein:4b", help="Model to use")
+    img_parser.add_argument("-w", "--width", type=int, default=1024, help="Image width")
+    img_parser.add_argument("-H", "--height", type=int, default=1024, help="Image height")
+    img_parser.add_argument("-s", "--steps", type=int, default=4, help="Inference steps")
+    img_parser.add_argument("--seed", type=int, default=None, help="Random seed")
+
     return parser.parse_args()
 
 
@@ -58,6 +66,17 @@ def main():
         asyncio.run(ask(args.question, args.model, args.stream, args.think))
     elif args.command == "chat":
         asyncio.run(chat_cli(args.model, args.system, args.stream, args.think))
+    elif args.command == "img":
+        asyncio.run(
+            handle_image_gen(
+                args.prompt,
+                args.model,
+                args.width,
+                args.height,
+                args.steps,
+                args.seed,
+            )
+        )
     else:
         print(f"Unknown command: {args.command}")
 

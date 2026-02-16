@@ -1,3 +1,4 @@
+from src.ImageGen import ImageModels, ImageRequest, generate_image
 from src.LLM import HumanMessage, SystemMessage, chat_non_stream, chat_stream
 from src.LLM.messages import AssistantMessage, BaseMessage
 from src.LLM.models import get_model
@@ -77,3 +78,48 @@ async def chat_cli(
         except Exception as e:
             print(f"Error: {e}\n")
             conversation.pop()
+
+import time
+
+async def handle_image_gen(
+    prompt: str,
+    model_name: str = "x/flux2-klein:4b",
+    width: int = 1024,
+    height: int = 1024,
+    steps: int = 4,
+    seed: int | None = None,
+) -> None:
+    print(f"Generating image with model: {model_name}")
+    print(f"Prompt: {prompt}")
+
+    # Map string model name to Enum
+    try:
+        # Simple lookup for now, can be expanded if aliases needed
+        model = ImageModels(model_name)
+    except ValueError:
+        # Fallback or strict? Let's try to match by value
+        try:
+            model = next(m for m in ImageModels if m.value == model_name)
+        except StopIteration:
+            print(f"Error: Model '{model_name}' not supported. Available: {[m.value for m in ImageModels]}")
+            return
+
+    request = ImageRequest(
+        prompt=prompt,
+        width=width,
+        height=height,
+        num_inference_steps=steps,
+        seed=seed,
+    )
+
+    try:
+        start_time = time.time()
+        print("Starting generation... (this may take a while)")
+        response = await generate_image(model, request)
+        duration = time.time() - start_time
+        
+        print(f"\nSuccess! ({duration:.1f}s)")
+        print(f"Image saved to: {response.image_path}")
+        
+    except Exception as e:
+        print(f"\nError generating image: {e}")

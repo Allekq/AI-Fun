@@ -1,0 +1,1 @@
+DEFAULT_IMAGE_OUTPUT_DIR = "ImageGenResults"
