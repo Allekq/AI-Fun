@@ -8,7 +8,7 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="main.py", description="AI-Fun CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    #ASK
+    # ASK
     ask_parser = subparsers.add_parser("ask", help="Ask a question to the LLM")
     ask_parser.add_argument("question", type=str, help="The question to ask")
     ask_parser.add_argument("-m", "--model", type=str, default="qwen3:8b", help="Model to use")
@@ -25,10 +25,18 @@ def parse_args():
         "-nt", "--no-think", dest="think", action="store_false", help="Disable thinking"
     )
 
-    #CHAT
+    # CHAT
     chat_parser = subparsers.add_parser("chat", help="Start an interactive chat")
     chat_parser.add_argument("-m", "--model", type=str, default="qwen3:8b", help="Model to use")
-    chat_parser.add_argument("-sys", "--system", type=str, nargs="?", const="", default=None, help="System prompt (optional)")
+    chat_parser.add_argument(
+        "-sys",
+        "--system",
+        type=str,
+        nargs="?",
+        const="",
+        default=None,
+        help="System prompt (optional)",
+    )
     chat_parser.add_argument(
         "-s", "--stream", dest="stream", action="store_true", help="Stream the response"
     )
@@ -42,16 +50,21 @@ def parse_args():
         "-nt", "--no-think", dest="think", action="store_false", help="Disable thinking"
     )
 
-    #IMG
+    # IMG
     img_parser = subparsers.add_parser("img", help="Generate an image")
     img_parser.add_argument("prompt", type=str, help="The image prompt")
     img_parser.add_argument(
         "-m", "--model", type=str, default="x/flux2-klein:4b", help="Model to use"
     )
     img_parser.add_argument("-s", "--steps", type=int, default=4, help="Inference steps")
+    img_parser.add_argument(
+        "-np", "--negative-prompt", type=str, default=None, help="Negative prompt"
+    )
 
-    #INFO GATHER
-    info_gather_parser = subparsers.add_parser("info_gather", help="Gather information from the web")
+    # INFO GATHER
+    info_gather_parser = subparsers.add_parser(
+        "info_gather", help="Gather information from the web"
+    )
     info_gather_parser.add_argument("query", type=str, help="The query to gather information about")
 
     return parser.parse_args()
@@ -70,6 +83,7 @@ def main():
                 args.prompt,
                 args.model,
                 args.steps,
+                args.negative_prompt,
             )
         )
     else:

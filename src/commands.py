@@ -88,14 +88,18 @@ async def handle_image_gen(
     prompt: str,
     model_name: str = "x/flux2-klein:4b",
     steps: int = 4,
+    negative_prompt: str | None = None,
 ) -> None:
     print(f"Generating image with model: {model_name}")
     print(f"Prompt: {prompt}")
+    if negative_prompt:
+        print(f"Negative prompt: {negative_prompt}")
 
     model = get_image_model(model_name)
 
     request = ImageRequest(
         prompt=prompt,
+        negative_prompt=negative_prompt,
         num_inference_steps=steps,
     )
 

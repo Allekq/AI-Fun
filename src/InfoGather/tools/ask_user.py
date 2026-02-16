@@ -20,7 +20,7 @@ class AskUserTool(AgentTool):
 
     @property
     def description(self) -> str:
-        return "Ask the user a question to gather information. Use this when you need clarification or more details from the user."
+        return "Ask the user a question to gather information. Use this to ask open-ended questions. The AI will determine which field(s) to fill based on the user's answer and the available fields."
 
     @property
     def parameters(self) -> dict[str, Any]:
@@ -29,11 +29,7 @@ class AskUserTool(AgentTool):
             "properties": {
                 "question": {
                     "type": "string",
-                    "description": "The question to ask the user",
-                },
-                "field_name": {
-                    "type": "string",
-                    "description": "Optional: The name of the field this question relates to",
+                    "description": "The question to ask the user. Can target multiple fields implicitly - the AI will determine which fields to fill based on the answer.",
                 },
             },
             "required": ["question"],
@@ -41,14 +37,14 @@ class AskUserTool(AgentTool):
 
     async def execute(self, **kwargs: Any) -> str:
         question = kwargs["question"]
-        field_name = kwargs.get("field_name")
-        field_meta: dict[str, Any] = {}
-        if field_name:
-            field = self.info_book.get_field(field_name)
-            if field:
-                field_meta = field.to_dict()
 
-        result = self.input_handler(question, field_meta)
+        available_fields = self.info_book.get_field_schemas()
+
+        context = {
+            "available_fields": available_fields,
+        }
+
+        result = self.input_handler(question, context)
 
         if isinstance(result, Awaitable):
             result = await result
