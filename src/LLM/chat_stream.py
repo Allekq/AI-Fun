@@ -1,6 +1,6 @@
 import asyncio
 from collections.abc import AsyncGenerator
-from typing import Any, cast
+from typing import Any
 
 import ollama
 from pydantic import BaseModel
@@ -59,6 +59,7 @@ async def chat_stream(
     think: bool | None = None,
     format: type[BaseModel] | None = None,
 ) -> AsyncGenerator[ChatResponse, None]:
+    tools_to_pass = tools
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
@@ -69,7 +70,7 @@ async def chat_stream(
         frequency_penalty=frequency_penalty,
         presence_penalty=presence_penalty,
         seed=seed,
-        tools=tools,
+        tools=tools_to_pass,
         think=think,
         format=format,
     )
@@ -81,7 +82,7 @@ async def chat_stream(
         tools=ollama_tools,
         format=ollama_format,
     ):
-        response = to_chat_response(chunk)
+        response = to_chat_response(chunk, tools=tools_to_pass)
         if chunk.get("done") and format:
             response.parsed = format.model_validate_json(response.content)
         yield response

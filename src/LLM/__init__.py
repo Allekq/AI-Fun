@@ -1,16 +1,16 @@
 from pydantic import BaseModel
 
 from .chat_non_stream import chat_non_stream
+from .chat_response import ChatResponse
 from .chat_stream import chat_stream
-from .chat_tool import chat_tool
 from .chat_tool import (
     ConversationEvent,
     LoopCompleteEvent,
     MessageEvent,
     ToolCallEvent,
     ToolResultEvent,
+    chat_tool,
 )
-from .chat_response import ChatResponse
 from .constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
@@ -21,9 +21,12 @@ from .constants import (
 )
 from .messages import AssistantMessage, BaseMessage, HumanMessage, SystemMessage
 from .models import OllamaModels, get_model
-from .tools import Tool, ToolCall
+from .tool_factory import build_tools
+from .tools import AgentTool, Tool, ToolCall
 
 __all__ = [
+    "AgentTool",
+    "build_tools",
     "chat_non_stream",
     "chat_stream",
     "chat_tool",

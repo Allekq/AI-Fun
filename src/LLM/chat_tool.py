@@ -1,11 +1,12 @@
-import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
 from pydantic import BaseModel
 
+from .chat_non_stream import _chat_non_stream
 from .chat_response import ChatResponse
+from .chat_stream import _chat_stream_single
 from .chat_utils import (
     build_chat_input,
     to_chat_response,
@@ -21,9 +22,6 @@ from .constants import (
 from .messages import BaseMessage
 from .models import OllamaModels
 from .tools import Tool
-
-from .chat_non_stream import _chat_non_stream
-from .chat_stream import _chat_stream_single
 
 
 @dataclass
@@ -65,6 +63,7 @@ async def chat_tool(
     think: bool | None = None,
     format: type[BaseModel] | None = None,
 ) -> list[ChatResponse]:
+    tools_to_pass = tools
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
@@ -75,7 +74,7 @@ async def chat_tool(
         frequency_penalty=frequency_penalty,
         presence_penalty=presence_penalty,
         seed=seed,
-        tools=tools,
+        tools=tools_to_pass,
         think=think,
         format=format,
     )
@@ -97,7 +96,7 @@ async def chat_tool(
                 ollama_model, ollama_messages, options, ollama_tools, ollama_format
             )
 
-        chat_response = to_chat_response(response, format)
+        chat_response = to_chat_response(response, format, tools=tools_to_pass)
         responses.append(chat_response)
 
         await _emit_event(MessageEvent(data=chat_response))

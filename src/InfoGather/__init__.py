@@ -1,3 +1,4 @@
+from .gather_conversation import gather_conversation, gather_conversation_simple
 from .info_book import InfoBook, InfoBookSettings
 from .info_gather_field import (
     BasicInfoGatherField,
@@ -5,7 +6,6 @@ from .info_gather_field import (
     InfoGatherField,
     ValidatedInfoGatherField,
 )
-from .gather_conversation import gather_conversation, gather_conversation_simple
 
 __all__ = [
     "InfoBook",

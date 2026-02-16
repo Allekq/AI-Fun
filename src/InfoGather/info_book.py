@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from .info_gather_field import InfoGatherField
 

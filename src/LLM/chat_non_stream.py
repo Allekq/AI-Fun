@@ -58,6 +58,7 @@ async def chat_non_stream(
     think: bool | None = None,
     format: type[BaseModel] | None = None,
 ) -> ChatResponse:
+    tools_to_pass = tools
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
@@ -68,7 +69,7 @@ async def chat_non_stream(
         frequency_penalty=frequency_penalty,
         presence_penalty=presence_penalty,
         seed=seed,
-        tools=tools,
+        tools=tools_to_pass,
         think=think,
         format=format,
     )
@@ -81,4 +82,4 @@ async def chat_non_stream(
         format=ollama_format,
     )
 
-    return to_chat_response(response, format)
+    return to_chat_response(response, format, tools=tools_to_pass)

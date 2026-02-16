@@ -1,3 +1,4 @@
+import json
 from typing import Any, TypeVar
 
 from pydantic import BaseModel
@@ -14,7 +15,7 @@ from .constants import (
 from .message_transformation import transform_messages, validate_messages
 from .messages import BaseMessage
 from .models import OllamaModels
-from .tools import Tool
+from .tools import Tool, ToolCall
 
 T = TypeVar("T")
 
@@ -69,6 +70,7 @@ def build_tools(tools: list[Tool] | None) -> list[dict[str, Any]] | None:
 def to_chat_response(
     response: dict[str, Any],
     format: type[BaseModel] | None = None,
+    tools: list[Tool] | None = None,
 ) -> ChatResponse[Any]:
     message = response.get("message", {})
     content = message.get("content", "")
@@ -79,6 +81,26 @@ def to_chat_response(
             parsed = format.model_validate_json(content)
         except Exception:
             pass
+
+    tool_calls: list[ToolCall] | None = None
+    raw_tool_calls = message.get("tool_calls")
+    if raw_tool_calls and tools:
+        tool_calls = []
+        tool_map = {t.name: t for t in tools}
+        for raw_call in raw_tool_calls:
+            func = raw_call.get("function", {})
+            tool_name = func.get("name")
+            if tool_name in tool_map:
+                arguments_str = func.get("arguments", "{}")
+                try:
+                    arguments = (
+                        json.loads(arguments_str)
+                        if isinstance(arguments_str, str)
+                        else arguments_str
+                    )
+                except (json.JSONDecodeError, TypeError):
+                    arguments = {}
+                tool_calls.append(ToolCall(tool=tool_map[tool_name], arguments=arguments))
 
     return ChatResponse(
         content=content,
@@ -92,6 +114,7 @@ def to_chat_response(
         context=response.get("context"),
         thinking=message.get("thinking"),
         parsed=parsed,
+        tool_calls=tool_calls,
     )
 
 

@@ -2,10 +2,10 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from src.InfoGather.info_book import InfoBook
-from src.InfoGather.tools.base import InfoBookTool
+from src.LLM.tools import AgentTool
 
 
-class ViewBookTool(InfoBookTool):
+class ViewBookTool(AgentTool):
     def __init__(
         self,
         info_book: InfoBook,
@@ -36,6 +36,6 @@ class ViewBookTool(InfoBookTool):
             lines.append(f"{filled_indicator} {field.name}: {field.value or '(not set)'}")
             lines.append(f"  Description: {field.description}")
             if field.required:
-                lines.append(f"  Required: Yes")
+                lines.append("  Required: Yes")
             lines.append("")
         return "\n".join(lines)

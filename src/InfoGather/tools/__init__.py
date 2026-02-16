@@ -1,16 +1,16 @@
-from .base import InfoBookTool
+from src.LLM.tools import AgentTool
+
 from .ask_user import AskUserTool
-from .write_field import WriteFieldTool
-from .view_book import ViewBookTool
+from .factory import build_tools_from_info_book
 from .get_field_info import GetFieldInfoTool
-from .factory import build_tools, build_tools_from_info_book
+from .view_book import ViewBookTool
+from .write_field import WriteFieldTool
 
 __all__ = [
-    "InfoBookTool",
+    "AgentTool",
     "AskUserTool",
     "WriteFieldTool",
     "ViewBookTool",
     "GetFieldInfoTool",
-    "build_tools",
     "build_tools_from_info_book",
 ]

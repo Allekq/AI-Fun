@@ -2,10 +2,10 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from src.InfoGather.info_book import InfoBook
-from src.InfoGather.tools.base import InfoBookTool
+from src.LLM.tools import AgentTool
 
 
-class GetFieldInfoTool(InfoBookTool):
+class GetFieldInfoTool(AgentTool):
     def __init__(
         self,
         info_book: InfoBook,
