@@ -3,7 +3,7 @@ from enum import Enum
 
 class OllamaModels(Enum):
     QWEN_8B = "qwen3:8b"
-    GLM_4_FLASH = "glm-4-flash"
+    GLM_4_7_FLASH = "glm-4.7-flash"
     GEMMA_1B = "gemma3:1b"
 
     def to_ollama_name(self) -> str:

@@ -73,6 +73,7 @@ async def chat_non_stream(
     presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
     seed: int | None = None,
     tools: list[Tool] | None = None,
+    think: bool | None = None,
 ) -> ChatResponse:
     ollama_model, ollama_messages, options, ollama_tools = build_chat_input(
         model=model,
@@ -85,6 +86,7 @@ async def chat_non_stream(
         presence_penalty=presence_penalty,
         seed=seed,
         tools=tools,
+        think=think,
     )
 
     response = await _chat_non_stream(
@@ -108,6 +110,7 @@ async def chat_stream(
     presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
     seed: int | None = None,
     tools: list[Tool] | None = None,
+    think: bool | None = None,
 ) -> AsyncGenerator[ChatResponse, None]:
     ollama_model, ollama_messages, options, ollama_tools = build_chat_input(
         model=model,
@@ -120,6 +123,7 @@ async def chat_stream(
         presence_penalty=presence_penalty,
         seed=seed,
         tools=tools,
+        think=think,
     )
 
     async for chunk in _chat_stream(

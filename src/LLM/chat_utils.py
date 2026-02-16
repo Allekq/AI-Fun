@@ -23,6 +23,7 @@ def build_options(
     frequency_penalty: float,
     presence_penalty: float,
     seed: int | None,
+    think: bool | None = None,
 ) -> dict[str, Any]:
     options: dict[str, Any] = {
         "temperature": temperature,
@@ -34,6 +35,8 @@ def build_options(
     }
     if seed is not None:
         options["seed"] = seed
+    if think is not None:
+        options["think"] = think
     return options
 
 
@@ -80,6 +83,7 @@ def build_chat_input(
     presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
     seed: int | None = None,
     tools: list[Tool] | None = None,
+    think: bool | None = None,
 ) -> tuple[str, list[dict[str, Any]], dict[str, Any], list[dict[str, Any]] | None]:
     validate_messages(messages)
 
@@ -91,6 +95,7 @@ def build_chat_input(
         frequency_penalty=frequency_penalty,
         presence_penalty=presence_penalty,
         seed=seed,
+        think=think,
     )
 
     ollama_tools = build_tools(tools)
