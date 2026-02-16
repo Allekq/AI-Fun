@@ -1,6 +1,15 @@
 from pydantic import BaseModel
 
-from .chat import chat_non_stream, chat_stream, chat_tool
+from .chat_non_stream import chat_non_stream
+from .chat_stream import chat_stream
+from .chat_tool import chat_tool
+from .chat_tool import (
+    ConversationEvent,
+    LoopCompleteEvent,
+    MessageEvent,
+    ToolCallEvent,
+    ToolResultEvent,
+)
 from .chat_response import ChatResponse
 from .constants import (
     DEFAULT_FREQUENCY_PENALTY,
@@ -9,13 +18,6 @@ from .constants import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
-)
-from .events import (
-    ConversationEvent,
-    LoopCompleteEvent,
-    MessageEvent,
-    ToolCallEvent,
-    ToolResultEvent,
 )
 from .messages import AssistantMessage, BaseMessage, HumanMessage, SystemMessage
 from .models import OllamaModels, get_model

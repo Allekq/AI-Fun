@@ -4,17 +4,16 @@ from typing import Any, cast
 from src.LLM import (
     BaseMessage,
     ChatResponse,
+    ConversationEvent,
     HumanMessage,
     OllamaModels,
     SystemMessage,
     chat_tool as llm_chat_tool,
 )
-from src.LLM.events import ConversationEvent
 
 from .info_book import InfoBook
 from .prompts.gather_system import build_system_prompt
 from .tools.factory import build_tools_from_info_book
-from .tools.handlers import ToolHandlers
 
 
 async def gather_conversation(
@@ -63,8 +62,7 @@ async def gather_conversation(
                 )
             )
 
-    tools = build_tools_from_info_book(info_book)
-    tool_handlers = ToolHandlers(
+    tools, tool_handlers = build_tools_from_info_book(
         info_book=info_book,
         input_handler=input_handler,
     )
@@ -73,7 +71,7 @@ async def gather_conversation(
         model=model,
         messages=cast(list[BaseMessage], messages),
         tools=tools,
-        tool_handlers=tool_handlers.get_handlers(),
+        tool_handlers=tool_handlers,
         callbacks=callbacks,
         stream=stream,
         **chat_kwargs,
