@@ -1,10 +1,13 @@
 from dataclasses import dataclass
+from typing import Generic, TypeVar
 
 from .tools import ToolCall
 
+T = TypeVar("T")
+
 
 @dataclass
-class ChatResponse:
+class ChatResponse(Generic[T]):
     content: str
     model: str
     done: bool
@@ -16,3 +19,4 @@ class ChatResponse:
     context: list[int] | None = None
     tool_calls: list[ToolCall] | None = None
     thinking: str | None = None
+    parsed: T | None = None

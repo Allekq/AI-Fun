@@ -1,3 +1,5 @@
+from pydantic import BaseModel
+
 from .chat import chat_non_stream, chat_stream
 from .chat_response import ChatResponse
 from .constants import (
@@ -24,6 +26,7 @@ __all__ = [
     "SystemMessage",
     "Tool",
     "ToolCall",
+    "BaseModel",
     "DEFAULT_TEMPERATURE",
     "DEFAULT_TOP_P",
     "DEFAULT_TOP_K",

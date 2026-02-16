@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator
 from typing import Any, cast
 
 import ollama
+from pydantic import BaseModel
 
 from .chat_response import ChatResponse
 from .chat_utils import (
@@ -27,6 +28,7 @@ async def _chat_non_stream(
     messages: list[dict[str, Any]],
     options: dict[str, Any],
     tools: list[dict[str, Any]] | None,
+    format: dict[str, Any] | None,
 ) -> dict[str, Any]:
     def _call_ollama() -> dict[str, Any]:
         return cast(
@@ -36,6 +38,7 @@ async def _chat_non_stream(
                 messages=messages,
                 options=options,
                 tools=tools,
+                format=format,
             ),
         )
 
@@ -47,6 +50,7 @@ async def _chat_stream(
     messages: list[dict[str, Any]],
     options: dict[str, Any],
     tools: list[dict[str, Any]] | None,
+    format: dict[str, Any] | None,
 ) -> AsyncGenerator[Any, None]:
     def _call_ollama_stream():
         return ollama.chat(
@@ -54,6 +58,7 @@ async def _chat_stream(
             messages=messages,
             options=options,
             tools=tools,
+            format=format,
             stream=True,
         )
 
@@ -74,8 +79,9 @@ async def chat_non_stream(
     seed: int | None = None,
     tools: list[Tool] | None = None,
     think: bool | None = None,
+    format: type[BaseModel] | None = None,
 ) -> ChatResponse:
-    ollama_model, ollama_messages, options, ollama_tools = build_chat_input(
+    ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
         temperature=temperature,
@@ -87,6 +93,7 @@ async def chat_non_stream(
         seed=seed,
         tools=tools,
         think=think,
+        format=format,
     )
 
     response = await _chat_non_stream(
@@ -94,9 +101,10 @@ async def chat_non_stream(
         messages=ollama_messages,
         options=options,
         tools=ollama_tools,
+        format=ollama_format,
     )
 
-    return to_chat_response(response)
+    return to_chat_response(response, format)
 
 
 async def chat_stream(
@@ -111,8 +119,9 @@ async def chat_stream(
     seed: int | None = None,
     tools: list[Tool] | None = None,
     think: bool | None = None,
+    format: type[BaseModel] | None = None,
 ) -> AsyncGenerator[ChatResponse, None]:
-    ollama_model, ollama_messages, options, ollama_tools = build_chat_input(
+    ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
         temperature=temperature,
@@ -124,6 +133,7 @@ async def chat_stream(
         seed=seed,
         tools=tools,
         think=think,
+        format=format,
     )
 
     async for chunk in _chat_stream(
@@ -131,5 +141,9 @@ async def chat_stream(
         messages=ollama_messages,
         options=options,
         tools=ollama_tools,
+        format=ollama_format,
     ):
-        yield to_chat_response(chunk)
+        response = to_chat_response(chunk)
+        if chunk.get("done") and format:
+            response.parsed = format.model_validate_json(response.content)
+        yield response

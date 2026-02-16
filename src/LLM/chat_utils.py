@@ -1,4 +1,6 @@
-from typing import Any
+from typing import Any, TypeVar
+
+from pydantic import BaseModel
 
 from .chat_response import ChatResponse
 from .constants import (
@@ -13,6 +15,14 @@ from .message_transformation import transform_messages, validate_messages
 from .messages import BaseMessage
 from .models import OllamaModels
 from .tools import Tool
+
+T = TypeVar("T")
+
+
+def build_format(format: type[BaseModel] | None) -> dict[str, Any] | None:
+    if format is None:
+        return None
+    return format.model_json_schema()
 
 
 def build_options(
@@ -56,10 +66,22 @@ def build_tools(tools: list[Tool] | None) -> list[dict[str, Any]] | None:
     ]
 
 
-def to_chat_response(response: dict[str, Any]) -> ChatResponse:
+def to_chat_response(
+    response: dict[str, Any],
+    format: type[BaseModel] | None = None,
+) -> ChatResponse[Any]:
     message = response.get("message", {})
+    content = message.get("content", "")
+
+    parsed: BaseModel | None = None
+    if format and content:
+        try:
+            parsed = format.model_validate_json(content)
+        except Exception:
+            pass
+
     return ChatResponse(
-        content=message.get("content", ""),
+        content=content,
         role=message.get("role"),
         model=response.get("model", ""),
         done=response.get("done", False),
@@ -69,6 +91,7 @@ def to_chat_response(response: dict[str, Any]) -> ChatResponse:
         eval_count=response.get("eval_count"),
         context=response.get("context"),
         thinking=message.get("thinking"),
+        parsed=parsed,
     )
 
 
@@ -84,7 +107,10 @@ def build_chat_input(
     seed: int | None = None,
     tools: list[Tool] | None = None,
     think: bool | None = None,
-) -> tuple[str, list[dict[str, Any]], dict[str, Any], list[dict[str, Any]] | None]:
+    format: type[BaseModel] | None = None,
+) -> tuple[
+    str, list[dict[str, Any]], dict[str, Any], list[dict[str, Any]] | None, dict[str, Any] | None
+]:
     validate_messages(messages)
 
     options = build_options(
@@ -100,5 +126,6 @@ def build_chat_input(
 
     ollama_tools = build_tools(tools)
     ollama_messages = transform_messages(messages)
+    ollama_format = build_format(format)
 
-    return model.to_ollama_name(), ollama_messages, options, ollama_tools
+    return model.to_ollama_name(), ollama_messages, options, ollama_tools, ollama_format
