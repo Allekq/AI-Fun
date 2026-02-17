@@ -1,5 +1,5 @@
 import json
-from typing import Any, TypeVar
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -15,8 +15,6 @@ from .message_transformation import transform_messages, validate_messages
 from .messages import AssistantMessage, BaseMessage, ToolMessage
 from .models import OllamaModels
 from .tools import Tool, ToolCall
-
-T = TypeVar("T")
 
 
 def build_format(format: type[BaseModel] | None) -> dict[str, Any] | None:

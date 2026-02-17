@@ -61,9 +61,7 @@ class AssistantMessage(BaseMessage):
                     "type": "function",
                     "function": {
                         "name": tc.tool.name,
-                        "arguments": tc.arguments
-                        if isinstance(tc.arguments, str)
-                        else str(tc.arguments),
+                        "arguments": tc.arguments,
                     },
                 }
                 for tc in self.tool_calls

@@ -2,7 +2,14 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from src.LLM import BaseMessage, HumanMessage, OllamaModels, chat_non_stream
+from src.LLM import (
+    AssistantMessage,
+    BaseMessage,
+    HumanMessage,
+    OllamaModels,
+    ToolMessage,
+    chat_non_stream,
+)
 
 CANNOT_INFER = "CANNOT_INFER"
 
@@ -47,7 +54,20 @@ def _format_conversation(messages: list[BaseMessage]) -> str:
     for msg in messages:
         role = msg.role
         content = msg.content
-        lines.append(f"{role}: {content}")
+        
+        if isinstance(msg, AssistantMessage):
+            if content:
+                lines.append(f"{role}: {content}")
+            if msg.tool_calls:
+                for tc in msg.tool_calls:
+                    lines.append(f"{role} (tool call): {tc.tool.name}({tc.arguments})")
+        
+        elif isinstance(msg, ToolMessage):
+            lines.append(f"tool result ({msg.tool_name}): {content}")
+        
+        else:
+            lines.append(f"{role}: {content}")
+            
     return "\n".join(lines)
 
 

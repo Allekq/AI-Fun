@@ -135,7 +135,8 @@ async def chat_tool(
 
             tool_calls = assistant_msg.tool_calls
         else:
-            tool_calls = None
+            # Received a ToolMessage response unexpectedly, stop the loop
+            break
 
         if not tool_calls:
             break
