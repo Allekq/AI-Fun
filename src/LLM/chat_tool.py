@@ -69,6 +69,9 @@ def LoopCompleteEvent(data: Any) -> ConversationEvent:
     return ConversationEvent(type="loop_complete", data=data)
 
 
+from .context import ToolContext, ToolExecutionResult
+
+
 async def chat_tool(
     model: OllamaModels,
     messages: list[BaseMessage],
@@ -86,6 +89,7 @@ async def chat_tool(
     seed: int | None = None,
     think: bool | None = None,
     format: type[BaseModel] | None = None,
+    context: ToolContext | None = None,
 ) -> list[BaseMessage]:
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
@@ -110,6 +114,8 @@ async def chat_tool(
     additions: list[BaseMessage] = []
     responses: list[AssistantMessage] = []
     tool_call_count = 0
+
+    import inspect
 
     while tool_call_count < max_tool_calls:
         if stream:
@@ -147,18 +153,57 @@ async def chat_tool(
         ollama_messages.append(assistant_msg_dict)
         additions.append(assistant_msg)
 
+        loop_should_break = False
+
         for tc in tool_calls:
             await _emit_event(ToolCallEvent(data=tc))
+
+            if context:
+                context.on_tool_call(tc.tool.name, tc.arguments)
+
+            result_str = ""
+            raw_result = None
 
             if tc.tool.name in tool_handlers:
                 handler = tool_handlers[tc.tool.name]
                 try:
-                    result = await handler(**tc.arguments)
-                    result_str = str(result) if result is not None else ""
+                    # Check if handler needs context injection
+                    sig = inspect.signature(handler)
+                    kwargs = tc.arguments.copy()
+                    if "context" in sig.parameters and context:
+                        # Only inject if type hint matches ToolContext to be safe?
+                        # For now, simplistic check: if param name is context, inject it
+                        kwargs["context"] = context
+
+                    result = await handler(**kwargs)
+                    raw_result = result
+
+                    if isinstance(result, ToolExecutionResult):
+                        result_str = result.content
+                        if result.force_stop:
+                            loop_should_break = True
+                    elif result is not None:
+                        result_str = str(result)
+                    
                 except Exception as e:
                     result_str = f"Error: {str(e)}"
             else:
                 result_str = f"Error: Unknown tool '{tc.tool.name}'"
+
+            # Context after execution hook
+            if context:
+                ctx_result = context.after_tool_execution(tc.tool.name, tc.arguments, raw_result)
+                if not ctx_result.should_continue:
+                    loop_should_break = True
+                
+                if ctx_result.injections:
+                    for injection in ctx_result.injections:
+                        # Add injections to ollama messages for next turn
+                        ollama_messages.append(injection.to_ollama_dict())
+                        # Also add to additions? Maybe not, usually these are system prompts or hidden context
+                        # BUT if we want them to persist in 'messages' passed back out, we should add them?
+                        # User requested "inject as user/system message", so likely yes.
+                        additions.append(injection)
 
             tool_msg = ToolMessage(
                 content=result_str,
@@ -170,6 +215,9 @@ async def chat_tool(
             additions.append(tool_msg)
 
             await _emit_event(ToolResultEvent(data={"tool": tc.tool.name, "result": result_str}))
+
+        if loop_should_break:
+            break
 
     await _emit_event(LoopCompleteEvent(data=responses))
     return additions

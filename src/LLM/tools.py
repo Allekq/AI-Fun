@@ -122,6 +122,14 @@ class AgentTool(ABC):
             if name == "self":
                 continue
 
+            # Skip 'context' parameter if it's annotated with ToolContext
+            # We defer import to avoid circular dependency or check string based on class name
+            if name == "context":
+                # simplistic check to avoid heavy imports here, can be robustified
+                type_name = str(param.annotation)
+                if "ToolContext" in type_name:
+                    continue
+
             py_type = param.annotation if param.annotation is not inspect.Parameter.empty else str
 
             json_type = _get_json_type(py_type)

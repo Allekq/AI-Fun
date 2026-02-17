@@ -14,6 +14,7 @@ from src.LLM import (
 )
 from src.LLM.tools import AgentTool, describe_tools_for_prompt
 
+from .context_limit import QuestionLimitContext
 from .info_book import InfoBook
 from .info_book_fallback import fill_unfilled_fields
 from .prompts.gather_system import build_system_prompt
@@ -31,6 +32,8 @@ async def gather_conversation(
     callbacks: list[Callable[[ConversationEvent], Awaitable[None]]] | None = None,
     stream: bool = False,
     extra_tools: list[AgentTool] | None = None,
+    question_limit: int = 6,
+    warn_at_question: int = 4,
     **chat_kwargs: Any,
 ) -> tuple[InfoBook, list[BaseMessage]]:
     """
@@ -47,6 +50,8 @@ async def gather_conversation(
         callbacks: Optional list of async callbacks for conversation events
         stream: Whether to use streaming mode
         extra_tools: Optional list of additional AgentTools to include
+        question_limit: Maximum number of questions to ask before stopping
+        warn_at_question: Number of questions at which to warn the AI
         **chat_kwargs: Additional kwargs passed to chat_tool (temperature, etc.)
 
     Returns:
@@ -86,6 +91,9 @@ async def gather_conversation(
         extra_tools=extra_tools,
     )
 
+    # Initialize context for limit management
+    context = QuestionLimitContext(limit=question_limit, warn_at=warn_at_question)
+
     additions = await llm_chat_tool(
         model=model,
         messages=cast(list[BaseMessage], messages),
@@ -93,6 +101,7 @@ async def gather_conversation(
         tool_handlers=tool_handlers,
         callbacks=callbacks,
         stream=stream,
+        context=context,
         **chat_kwargs,
     )
 
