@@ -42,3 +42,8 @@ class AgentTool(ABC):
             description=self.description,
             parameters=self.parameters,
         )
+
+
+def describe_tools_for_prompt(tools: list["AgentTool"]) -> str:
+    """Generate formatted tool descriptions for system prompts."""
+    return "\n".join(f"- {t.name}: {t.description}" for t in tools)

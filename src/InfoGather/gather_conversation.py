@@ -12,10 +12,26 @@ from src.LLM import (
 from src.LLM import (
     chat_tool as llm_chat_tool,
 )
+from src.LLM.tools import AgentTool, describe_tools_for_prompt
 
 from .info_book import InfoBook
-from .prompts.gather_system import build_system_prompt
+from .prompts.gather_system import DEFAULT_GATHER_SYSTEM_PROMPT_TEMPLATE
 from .tools.factory import build_tools_from_info_book
+
+
+def build_system_prompt(
+    custom_prompt: str | None = None,
+    extra_tools: list[AgentTool] | None = None,
+) -> str:
+    tools_section = ""
+    if extra_tools:
+        tools_section = describe_tools_for_prompt(extra_tools)
+
+    base_prompt = DEFAULT_GATHER_SYSTEM_PROMPT_TEMPLATE.format(tools=tools_section)
+
+    if custom_prompt:
+        return f"{custom_prompt}\n\n{base_prompt}"
+    return base_prompt
 
 
 async def gather_conversation(
@@ -26,6 +42,7 @@ async def gather_conversation(
     custom_system_prompt: str | None = None,
     callbacks: list[Callable[[ConversationEvent], Awaitable[None]]] | None = None,
     stream: bool = False,
+    extra_tools: list[AgentTool] | None = None,
     **chat_kwargs: Any,
 ) -> tuple[InfoBook, list[ChatResponse]]:
     """
@@ -39,14 +56,15 @@ async def gather_conversation(
         custom_system_prompt: Optional custom system prompt (appended to default)
         callbacks: Optional list of async callbacks for conversation events
         stream: Whether to use streaming mode
+        extra_tools: Optional list of additional AgentTools to include
         **chat_kwargs: Additional kwargs passed to chat_tool (temperature, etc.)
 
     Returns:
         Tuple of (filled InfoBook, list of ChatResponse from each turn)
     """
-    system_prompt = build_system_prompt(custom_system_prompt)
+    system_prompt = build_system_prompt(custom_system_prompt, extra_tools)
     if info_book.system_prompt:
-        system_prompt = build_system_prompt(info_book.system_prompt)
+        system_prompt = build_system_prompt(info_book.system_prompt, extra_tools)
 
     messages: list[BaseMessage] = [
         SystemMessage(content=system_prompt),
@@ -67,6 +85,7 @@ async def gather_conversation(
     tools, tool_handlers = build_tools_from_info_book(
         info_book=info_book,
         input_handler=input_handler,
+        extra_tools=extra_tools,
     )
 
     responses = await llm_chat_tool(
