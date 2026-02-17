@@ -8,7 +8,7 @@ class AskUserTool(InfoBookTool):
     def __init__(
         self,
         info_book: InfoBook,
-        input_handler: Callable[[str, dict], str | Awaitable[str]],
+        input_handler: Callable[str, str | Awaitable[str]],
     ):
         super().__init__(info_book)
         self.input_handler = input_handler
@@ -28,13 +28,8 @@ class AskUserTool(InfoBookTool):
         Args:
             question: The question to ask the user.
         """
-        available_fields = self.info_book.get_field_schemas()
 
-        ctx = {
-            "available_fields": available_fields,
-        }
-
-        result = self.input_handler(question, ctx)
+        result = self.input_handler(question)
 
         if isinstance(result, Awaitable):
             result = await result

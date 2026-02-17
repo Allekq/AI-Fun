@@ -1,7 +1,7 @@
 import argparse
 import asyncio
 
-from src.commands import ask, chat_cli, handle_image_gen
+from src.commands import ask, chat_cli, handle_company_logo, handle_image_gen
 
 
 def parse_args():
@@ -67,6 +67,9 @@ def parse_args():
     )
     info_gather_parser.add_argument("query", type=str, help="The query to gather information about")
 
+    # COMPANY LOGO MINIGAME
+    comp_parser = subparsers.add_parser("comp", help="Start the company logo minigame")
+
     return parser.parse_args()
 
 
@@ -86,6 +89,8 @@ def main():
                 args.negative_prompt,
             )
         )
+    elif args.command == "comp":
+        asyncio.run(handle_company_logo())
     else:
         print(f"Unknown command: {args.command}")
 
