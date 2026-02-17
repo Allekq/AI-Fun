@@ -1,4 +1,5 @@
 from typing import Any
+
 from pydantic import BaseModel
 
 from src.LLM import BaseMessage, HumanMessage, OllamaModels, chat_non_stream
