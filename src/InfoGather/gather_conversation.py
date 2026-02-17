@@ -15,6 +15,7 @@ from src.LLM import (
 from src.LLM.tools import AgentTool, describe_tools_for_prompt
 
 from .info_book import InfoBook
+from .info_book_fallback import fill_unfilled_fields
 from .prompts.gather_system import DEFAULT_GATHER_SYSTEM_PROMPT_TEMPLATE
 from .tools.factory import build_tools_from_info_book
 
@@ -23,15 +24,14 @@ def build_system_prompt(
     custom_prompt: str | None = None,
     extra_tools: list[AgentTool] | None = None,
 ) -> str:
+    if custom_prompt:
+        return custom_prompt
+
     tools_section = ""
     if extra_tools:
         tools_section = describe_tools_for_prompt(extra_tools)
 
-    base_prompt = DEFAULT_GATHER_SYSTEM_PROMPT_TEMPLATE.format(tools=tools_section)
-
-    if custom_prompt:
-        return f"{custom_prompt}\n\n{base_prompt}"
-    return base_prompt
+    return DEFAULT_GATHER_SYSTEM_PROMPT_TEMPLATE.format(tools=tools_section)
 
 
 async def gather_conversation(
@@ -53,7 +53,7 @@ async def gather_conversation(
         model: The Ollama model to use
         input_handler: Async/sync callable that takes (question, field_metadata) and returns user's answer
         initial_prompt: Optional initial message to start the conversation
-        custom_system_prompt: Optional custom system prompt (appended to default)
+        custom_system_prompt: Optional custom system prompt. If provided, used exclusively (no default added)
         callbacks: Optional list of async callbacks for conversation events
         stream: Whether to use streaming mode
         extra_tools: Optional list of additional AgentTools to include
@@ -63,8 +63,6 @@ async def gather_conversation(
         Tuple of (filled InfoBook, list of ChatResponse from each turn)
     """
     system_prompt = build_system_prompt(custom_system_prompt, extra_tools)
-    if info_book.system_prompt:
-        system_prompt = build_system_prompt(info_book.system_prompt, extra_tools)
 
     messages: list[BaseMessage] = [
         SystemMessage(content=system_prompt),
@@ -97,6 +95,19 @@ async def gather_conversation(
         stream=stream,
         **chat_kwargs,
     )
+
+    all_messages = list(messages)
+    for response in responses:
+        if response.content:
+            all_messages.append(HumanMessage(content=response.content))
+
+    if info_book.get_fallback_enabled_fields():
+        await fill_unfilled_fields(
+            messages=all_messages,
+            info_book=info_book,
+            model=model,
+            **chat_kwargs,
+        )
 
     return info_book, responses
 

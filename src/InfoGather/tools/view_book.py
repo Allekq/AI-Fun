@@ -1,5 +1,4 @@
 from collections.abc import Awaitable, Callable
-from typing import Any
 
 from src.InfoGather.info_book import InfoBook
 from src.LLM.tools import AgentTool
@@ -9,7 +8,7 @@ class ViewBookTool(AgentTool):
     def __init__(
         self,
         info_book: InfoBook,
-        input_handler: Callable[[str, dict[str, Any]], str | Awaitable[str]],
+        input_handler: Callable[[str, dict], str | Awaitable[str]],
     ):
         self.info_book = info_book
         self.input_handler = input_handler
@@ -22,14 +21,10 @@ class ViewBookTool(AgentTool):
     def description(self) -> str:
         return "View the current state of the info book, including all fields and their current values."
 
-    @property
-    def parameters(self) -> dict[str, Any]:
-        return {
-            "type": "object",
-            "properties": {},
-        }
-
-    async def execute(self, **kwargs: Any) -> str:
+    async def execute(self) -> str:
+        """
+        View the info book state.
+        """
         lines = ["=== Info Book State ==="]
         for field in self.info_book.info:
             filled_indicator = "[FILLED]" if field.is_filled() else "[EMPTY]"
