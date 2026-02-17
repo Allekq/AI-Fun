@@ -2,11 +2,15 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
 
-FILL_IF_EXPLICIT = "fill if user explicitly mentioned it"
-FILL_IF_HINTED = "fill if any information provided hinted about this"
-FILL_WITH_DEFAULT = "fill with default value unless explicitly provided"
-RANDOMIZE_IF_MISSING = "randomize if not provided"
-DONT_FILL = "never auto-fill, user must provide"
+FILL_IF_EXPLICIT = (
+    "only fill if user explicitly mentioned this specific information in their response"
+)
+FILL_IF_HINTED = "fill if the user's response contains hints, context, or related information that implies this value"
+FILL_WITH_DEFAULT = (
+    "fill with a sensible default if user doesn't provide it, unless they explicitly object"
+)
+RANDOMIZE_IF_MISSING = "generate a reasonable random value if not provided"
+DONT_FILL = "never auto-fill - user must explicitly provide this information"
 
 
 @dataclass

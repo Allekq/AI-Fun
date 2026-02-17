@@ -4,11 +4,7 @@ from typing import Any, cast
 import ollama
 from pydantic import BaseModel
 
-from .chat_response import ChatResponse
-from .chat_utils import (
-    build_chat_input,
-    to_chat_response,
-)
+from .chat_utils import build_chat_input, to_message
 from .constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
@@ -57,7 +53,7 @@ async def chat_non_stream(
     tools: list[Tool] | None = None,
     think: bool | None = None,
     format: type[BaseModel] | None = None,
-) -> ChatResponse:
+) -> BaseMessage:
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
@@ -81,4 +77,4 @@ async def chat_non_stream(
         format=ollama_format,
     )
 
-    return to_chat_response(response, format, tools=tools)
+    return to_message(response, tools=tools)

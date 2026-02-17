@@ -7,11 +7,7 @@ import ollama
 from pydantic import BaseModel
 
 from .chat_non_stream import _chat_non_stream
-from .chat_response import ChatResponse
-from .chat_utils import (
-    build_chat_input,
-    to_chat_response,
-)
+from .chat_utils import build_chat_input, to_message
 from .constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
@@ -20,7 +16,7 @@ from .constants import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
 )
-from .messages import BaseMessage
+from .messages import AssistantMessage, BaseMessage, ToolMessage
 from .models import OllamaModels
 from .tools import Tool
 
@@ -90,7 +86,7 @@ async def chat_tool(
     seed: int | None = None,
     think: bool | None = None,
     format: type[BaseModel] | None = None,
-) -> list[ChatResponse]:
+) -> list[BaseMessage]:
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
@@ -111,7 +107,8 @@ async def chat_tool(
             for callback in callbacks:
                 await callback(event)
 
-    responses: list[ChatResponse] = []
+    additions: list[BaseMessage] = []
+    responses: list[AssistantMessage] = []
     tool_call_count = 0
 
     while tool_call_count < max_tool_calls:
@@ -125,48 +122,53 @@ async def chat_tool(
 
             if not last_chunk:
                 break
-            chat_response = to_chat_response(last_chunk, format, tools=tools)
+            assistant_msg = to_message(last_chunk, tools=tools, format=format)
         else:
             raw_response = await _chat_non_stream(
                 ollama_model, ollama_messages, options, ollama_tools, ollama_format
             )
-            chat_response = to_chat_response(raw_response, format, tools=tools)
+            assistant_msg = to_message(raw_response, tools=tools, format=format)
 
-        responses.append(chat_response)
+        if isinstance(assistant_msg, AssistantMessage):
+            responses.append(assistant_msg)
+            await _emit_event(MessageEvent(data=assistant_msg))
 
-        await _emit_event(MessageEvent(data=chat_response))
-
-        tool_calls = chat_response.tool_calls
+            tool_calls = assistant_msg.tool_calls
+        else:
+            tool_calls = None
 
         if not tool_calls:
             break
 
         tool_call_count += 1
 
-        for tool_call in tool_calls:
-            tool_name = tool_call.tool.name
-            await _emit_event(ToolCallEvent(data=tool_call))
+        assistant_msg_dict = assistant_msg.to_ollama_dict()
+        ollama_messages.append(assistant_msg_dict)
+        additions.append(assistant_msg)
 
-            if tool_name in tool_handlers:
-                handler = tool_handlers[tool_name]
+        for tc in tool_calls:
+            await _emit_event(ToolCallEvent(data=tc))
+
+            if tc.tool.name in tool_handlers:
+                handler = tool_handlers[tc.tool.name]
                 try:
-                    result = await handler(**tool_call.arguments)
+                    result = await handler(**tc.arguments)
                     result_str = str(result) if result is not None else ""
                 except Exception as e:
                     result_str = f"Error: {str(e)}"
             else:
-                result_str = f"Error: Unknown tool '{tool_name}'"
+                result_str = f"Error: Unknown tool '{tc.tool.name}'"
 
-            ollama_messages.append(
-                {
-                    "role": "tool",
-                    "content": result_str,
-                    "tool_call_id": tool_call.id,
-                    "name": tool_name,
-                }
+            tool_msg = ToolMessage(
+                content=result_str,
+                tool_call_id=tc.id,
+                tool_name=tc.tool.name,
             )
+            tool_msg_dict = tool_msg.to_ollama_dict()
+            ollama_messages.append(tool_msg_dict)
+            additions.append(tool_msg)
 
-            await _emit_event(ToolResultEvent(data={"tool": tool_name, "result": result_str}))
+            await _emit_event(ToolResultEvent(data={"tool": tc.tool.name, "result": result_str}))
 
     await _emit_event(LoopCompleteEvent(data=responses))
-    return responses
+    return additions

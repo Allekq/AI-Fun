@@ -20,7 +20,7 @@ class AskUserTool(InfoBookTool):
 
     @property
     def description(self) -> str:
-        return "Ask the user a question to gather information. Use this to ask open-ended questions. The AI will determine which field(s) to fill based on the user's answer and the available fields."
+        return "Ask the user a question to gather needed information. Ask about one or more related fields. Adapt your questioning based on the conversation flow."
 
     async def execute(self, question: str) -> str:
         """

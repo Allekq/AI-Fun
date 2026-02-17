@@ -3,7 +3,6 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
-from .chat_response import ChatResponse
 from .constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
@@ -13,7 +12,7 @@ from .constants import (
     DEFAULT_TOP_P,
 )
 from .message_transformation import transform_messages, validate_messages
-from .messages import BaseMessage
+from .messages import AssistantMessage, BaseMessage, ToolMessage
 from .models import OllamaModels
 from .tools import Tool, ToolCall
 
@@ -67,63 +66,71 @@ def build_tools_for_chat_format(tools: list[Tool] | None) -> list[dict[str, Any]
     ]
 
 
-def to_chat_response(
+def _parse_tool_calls(
+    raw_tool_calls: list[dict[str, Any]], tools: list[Tool] | None
+) -> list[ToolCall] | None:
+    if not raw_tool_calls or not tools:
+        return None
+
+    tool_calls = []
+    tool_map = {t.name: t for t in tools}
+    for raw_call in raw_tool_calls:
+        func = raw_call.get("function", {})
+        tool_name = func.get("name")
+        if tool_name in tool_map:
+            arguments_str = func.get("arguments", "{}")
+            try:
+                arguments = (
+                    json.loads(arguments_str) if isinstance(arguments_str, str) else arguments_str
+                )
+            except (json.JSONDecodeError, TypeError) as e:
+                print(f"ERROR - Failed to parse tool arguments for {tool_name}: {e}")
+                arguments = {}
+            tool_calls.append(
+                ToolCall(
+                    id=raw_call.get("id", ""),
+                    tool=tool_map[tool_name],
+                    arguments=arguments,
+                )
+            )
+        else:
+            print(f"ERROR - Tool '{tool_name}' not found in available tools")
+    return tool_calls if tool_calls else None
+
+
+def to_message(
     response: dict[str, Any],
-    format: type[BaseModel] | None = None,
     tools: list[Tool] | None = None,
-) -> ChatResponse[Any]:
+    format: type[BaseModel] | None = None,
+) -> AssistantMessage | ToolMessage:
     message = response.get("message", {})
-    content = message.get("content", "")
+    role = message.get("role", "assistant")
+
+    if role == "tool":
+        return ToolMessage(
+            content=message.get("content", ""),
+            tool_call_id=message.get("tool_call_id", ""),
+            tool_name=message.get("name", ""),
+        )
+
+    raw_tool_calls = message.get("tool_calls")
+    tool_calls = _parse_tool_calls(raw_tool_calls, tools) if raw_tool_calls else None
 
     parsed: BaseModel | None = None
+    content = message.get("content", "")
     if format and content:
         try:
             parsed = format.model_validate_json(content)
         except Exception:
             pass
 
-    tool_calls: list[ToolCall] | None = None
-    raw_tool_calls = message.get("tool_calls")
-    if raw_tool_calls and tools:
-        tool_calls = []
-        tool_map = {t.name: t for t in tools}
-        for raw_call in raw_tool_calls:
-            func = raw_call.get("function", {})
-            tool_name = func.get("name")
-            if tool_name in tool_map:
-                arguments_str = func.get("arguments", "{}")
-                try:
-                    arguments = (
-                        json.loads(arguments_str)
-                        if isinstance(arguments_str, str)
-                        else arguments_str
-                    )
-                except (json.JSONDecodeError, TypeError) as e:
-                    print(f"ERROR - Failed to parse tool arguments for {tool_name}: {e}")
-                    arguments = {}
-                tool_calls.append(
-                    ToolCall(
-                        id=raw_call.get("id", ""),
-                        tool=tool_map[tool_name],
-                        arguments=arguments,
-                    )
-                )
-            else:
-                print(f"ERROR - Tool '{tool_name}' not found in available tools")
-
-    return ChatResponse(
+    return AssistantMessage(
         content=content,
-        role=message.get("role"),
-        model=response.get("model", ""),
-        done=response.get("done", False),
-        total_duration=response.get("total_duration"),
-        load_duration=response.get("load_duration"),
-        prompt_eval_count=response.get("prompt_eval_count"),
-        eval_count=response.get("eval_count"),
-        context=response.get("context"),
-        thinking=message.get("thinking"),
-        parsed=parsed,
         tool_calls=tool_calls,
+        thinking=message.get("thinking"),
+        model=response.get("model"),
+        done=response.get("done"),
+        parsed=parsed,
     )
 
 

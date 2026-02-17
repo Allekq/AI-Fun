@@ -3,7 +3,7 @@ These are language-agnostic coding principles to keep code readable, maintainabl
 ## Constants & Configuration
 - Avoid hardcoded values; surface any configurable value as a constant or config entry.
 - Use clear naming for constants (e.g., UPPER_SNAKE_CASE).
-- Centralize configuration (dedicated config/constants module or file).
+- Centralize configuration for shared values (dedicated config/constants module or file).
 - Use enums or equivalent for fixed-choice options and store runtime values in the enum.
 
 ## Data Structures & Types
@@ -34,7 +34,7 @@ These are language-agnostic coding principles to keep code readable, maintainabl
 - Code must compile without type errors
 
 ## Code Organization
-- DRY (dont repete yourself) rules must be respected
+- DRY (dont repete yourself) rules must be respected. (reusing a utility function is good, writing repeted functionality is bad)
 - Utility functions in dedicated files 
 - One clear responsibility per file
 - Clean separation: core logic → utilities → entry points

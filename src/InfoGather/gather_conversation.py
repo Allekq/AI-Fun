@@ -1,9 +1,9 @@
 from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
+from src.InfoGather.constants import InputHandler
 from src.LLM import (
     BaseMessage,
-    ChatResponse,
     ConversationEvent,
     HumanMessage,
     OllamaModels,
@@ -14,7 +14,6 @@ from src.LLM import (
 )
 from src.LLM.tools import AgentTool, describe_tools_for_prompt
 
-from src.InfoGather.constants import InputHandler
 from .info_book import InfoBook
 from .info_book_fallback import fill_unfilled_fields
 from .prompts.gather_system import build_system_prompt
@@ -33,7 +32,7 @@ async def gather_conversation(
     stream: bool = False,
     extra_tools: list[AgentTool] | None = None,
     **chat_kwargs: Any,
-) -> tuple[InfoBook, list[ChatResponse]]:
+) -> tuple[InfoBook, list[BaseMessage]]:
     """
     Run an information gathering conversation with the user.
 
@@ -51,7 +50,7 @@ async def gather_conversation(
         **chat_kwargs: Additional kwargs passed to chat_tool (temperature, etc.)
 
     Returns:
-        Tuple of (filled InfoBook, list of ChatResponse from each turn)
+        Tuple of (filled InfoBook, list of BaseMessage additions from the tool loop)
     """
     tools_section = ""
     if extra_tools:
@@ -87,7 +86,7 @@ async def gather_conversation(
         extra_tools=extra_tools,
     )
 
-    responses = await llm_chat_tool(
+    additions = await llm_chat_tool(
         model=model,
         messages=cast(list[BaseMessage], messages),
         tools=tools,
@@ -98,9 +97,7 @@ async def gather_conversation(
     )
 
     all_messages = list(messages)
-    for response in responses:
-        if response.content:
-            all_messages.append(HumanMessage(content=response.content))
+    all_messages.extend(additions)
 
     if info_book.get_fallback_enabled_fields():
         await fill_unfilled_fields(
@@ -110,7 +107,7 @@ async def gather_conversation(
             **chat_kwargs,
         )
 
-    return info_book, responses
+    return info_book, additions
 
 
 async def gather_conversation_simple(
@@ -118,7 +115,7 @@ async def gather_conversation_simple(
     model: OllamaModels,
     input_handler: InputHandler,
     **kwargs: Any,
-) -> tuple[InfoBook, list[ChatResponse]]:
+) -> tuple[InfoBook, list[BaseMessage]]:
     """
     Simplified version of gather_conversation with default settings.
     """

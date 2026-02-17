@@ -11,7 +11,7 @@ class WriteFieldTool(InfoBookTool):
 
     @property
     def description(self) -> str:
-        return "Write a value to a field in the info book. Use this to save information you've gathered from the user."
+        return "Update the info book with new information from the user. Use this whenever the user provides details that are relevant to any field - extract and save anything useful from their response."
 
     async def execute(self, field_name: str, value: str) -> str:
         """
