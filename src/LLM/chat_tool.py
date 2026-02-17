@@ -1,12 +1,13 @@
-from collections.abc import Awaitable, Callable
+import asyncio
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
+import ollama
 from pydantic import BaseModel
 
 from .chat_non_stream import _chat_non_stream
 from .chat_response import ChatResponse
-from .chat_stream import _chat_stream_single
 from .chat_utils import (
     build_chat_input,
     to_chat_response,
@@ -24,9 +25,31 @@ from .models import OllamaModels
 from .tools import Tool
 
 
+async def _chat_stream_generator(
+    model: str,
+    messages: list[dict[str, Any]],
+    options: dict[str, Any],
+    tools: list[dict[str, Any]] | None,
+    format: dict[str, Any] | None,
+) -> AsyncGenerator[dict[str, Any], None]:
+    def _call_ollama_stream():
+        return ollama.chat(
+            model=model,
+            messages=messages,
+            options=options,
+            tools=tools,
+            format=format,
+            stream=True,
+        )
+
+    stream = await asyncio.to_thread(_call_ollama_stream)
+    for chunk in stream:
+        yield chunk
+
+
 @dataclass
 class ConversationEvent:
-    type: Literal["message", "tool_call", "tool_result", "loop_complete"]
+    type: Literal["message", "tool_call", "tool_result", "loop_complete", "stream_chunk"]
     data: Any
 
 
@@ -42,6 +65,10 @@ def ToolResultEvent(data: Any) -> ConversationEvent:
     return ConversationEvent(type="tool_result", data=data)
 
 
+def StreamChunkEvent(data: Any) -> ConversationEvent:
+    return ConversationEvent(type="stream_chunk", data=data)
+
+
 def LoopCompleteEvent(data: Any) -> ConversationEvent:
     return ConversationEvent(type="loop_complete", data=data)
 
@@ -53,6 +80,7 @@ async def chat_tool(
     tool_handlers: dict[str, Callable[..., Awaitable[Any]]],
     callbacks: list[Callable[[ConversationEvent], Awaitable[None]]] | None = None,
     stream: bool = False,
+    max_tool_calls: int = 20,
     temperature: float = DEFAULT_TEMPERATURE,
     top_p: float = DEFAULT_TOP_P,
     top_k: int = DEFAULT_TOP_K,
@@ -63,7 +91,6 @@ async def chat_tool(
     think: bool | None = None,
     format: type[BaseModel] | None = None,
 ) -> list[ChatResponse]:
-    tools_to_pass = tools
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
@@ -74,7 +101,7 @@ async def chat_tool(
         frequency_penalty=frequency_penalty,
         presence_penalty=presence_penalty,
         seed=seed,
-        tools=tools_to_pass,
+        tools=tools,
         think=think,
         format=format,
     )
@@ -85,18 +112,26 @@ async def chat_tool(
                 await callback(event)
 
     responses: list[ChatResponse] = []
+    tool_call_count = 0
 
-    while True:
+    while tool_call_count < max_tool_calls:
         if stream:
-            response = await _chat_stream_single(
+            last_chunk: dict[str, Any] = {}
+            async for chunk in _chat_stream_generator(
                 ollama_model, ollama_messages, options, ollama_tools, ollama_format
-            )
-        else:
-            response = await _chat_non_stream(
-                ollama_model, ollama_messages, options, ollama_tools, ollama_format
-            )
+            ):
+                await _emit_event(StreamChunkEvent(data=chunk))
+                last_chunk = chunk
 
-        chat_response = to_chat_response(response, format, tools=tools_to_pass)
+            if not last_chunk:
+                break
+            chat_response = to_chat_response(last_chunk, format, tools=tools)
+        else:
+            raw_response = await _chat_non_stream(
+                ollama_model, ollama_messages, options, ollama_tools, ollama_format
+            )
+            chat_response = to_chat_response(raw_response, format, tools=tools)
+
         responses.append(chat_response)
 
         await _emit_event(MessageEvent(data=chat_response))
@@ -105,6 +140,8 @@ async def chat_tool(
 
         if not tool_calls:
             break
+
+        tool_call_count += 1
 
         for tool_call in tool_calls:
             tool_name = tool_call.tool.name
@@ -124,6 +161,7 @@ async def chat_tool(
                 {
                     "role": "tool",
                     "content": result_str,
+                    "tool_call_id": tool_call.id,
                     "name": tool_name,
                 }
             )

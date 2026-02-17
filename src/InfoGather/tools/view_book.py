@@ -1,18 +1,14 @@
-from collections.abc import Awaitable, Callable
+from src.InfoGather.tools.base import InfoBookTool
 
-from src.InfoGather.info_book import InfoBook
-from src.LLM.tools import AgentTool
+BOOK_STATE = "=== Info Book State ==="
+FILLED_INDICATOR = "[FILLED]"
+EMPTY_INDICATOR = "[EMPTY]"
+FIELD_DESCRIPTION = "Description: {description}"
+FIELD_REQUIRED = "Required: Yes"
+NOT_SET = "(not set)"
 
 
-class ViewBookTool(AgentTool):
-    def __init__(
-        self,
-        info_book: InfoBook,
-        input_handler: Callable[[str, dict], str | Awaitable[str]],
-    ):
-        self.info_book = info_book
-        self.input_handler = input_handler
-
+class ViewBookTool(InfoBookTool):
     @property
     def name(self) -> str:
         return "view_book"
@@ -25,12 +21,12 @@ class ViewBookTool(AgentTool):
         """
         View the info book state.
         """
-        lines = ["=== Info Book State ==="]
+        lines = [BOOK_STATE]
         for field in self.info_book.info:
-            filled_indicator = "[FILLED]" if field.is_filled() else "[EMPTY]"
-            lines.append(f"{filled_indicator} {field.name}: {field.value or '(not set)'}")
-            lines.append(f"  Description: {field.description}")
+            filled_indicator = FILLED_INDICATOR if field.is_filled() else EMPTY_INDICATOR
+            lines.append(f"{filled_indicator} {field.name}: {field.value or NOT_SET}")
+            lines.append(f"  {FIELD_DESCRIPTION.format(description=field.description)}")
             if field.required:
-                lines.append("  Required: Yes")
+                lines.append(f"  {FIELD_REQUIRED}")
             lines.append("")
         return "\n".join(lines)

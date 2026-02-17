@@ -1,6 +1,4 @@
 import asyncio
-import os
-import time
 from pathlib import Path
 
 from .models import ImageModels
@@ -43,27 +41,26 @@ async def generate_with_cli(
     stdout, stderr = await process.communicate()
 
     if process.returncode != 0:
-        error_msg = stderr.decode().strip() or stdout.decode().strip() or "Unknown error"
+        error_msg = (
+            stderr.decode("utf-8", errors="replace").strip()
+            or stdout.decode("utf-8", errors="replace").strip()
+            or "Unknown error"
+        )
         raise RuntimeError(f"CLI generation failed (code {process.returncode}): {error_msg}")
 
     current_files = set(output_dir.glob("*.png"))
     new_files = current_files - existing_files
 
-    final_path = None
-    if new_files:
-        final_path = new_files.pop()
-    else:
-        try:
-            latest_file = max(output_dir.glob("*.png"), key=os.path.getctime)
-            if time.time() - os.path.getctime(latest_file) < 10:
-                final_path = latest_file
-        except ValueError:
-            pass
-
-    if not final_path:
+    if not new_files:
         raise RuntimeError("No new image file detected after generation.")
+
+    final_path = max(new_files, key=lambda p: p.stat().st_mtime)
 
     return ImageResponse(
         image_path=str(final_path),
-        metadata={"model": model.value, "cmd": cmd, "stdout": stdout.decode()},
+        metadata={
+            "model": model.value,
+            "cmd": cmd,
+            "stdout": stdout.decode("utf-8", errors="replace"),
+        },
     )

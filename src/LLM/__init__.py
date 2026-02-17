@@ -7,6 +7,7 @@ from .chat_tool import (
     ConversationEvent,
     LoopCompleteEvent,
     MessageEvent,
+    StreamChunkEvent,
     ToolCallEvent,
     ToolResultEvent,
     chat_tool,
@@ -20,18 +21,19 @@ from .constants import (
     DEFAULT_TOP_P,
 )
 from .messages import AssistantMessage, BaseMessage, HumanMessage, SystemMessage
-from .models import OllamaModels, get_model
-from .tool_factory import build_tools
+from .models import DEFAULT_MODEL, OllamaModels, get_model
+from .tool_factory import build_usable_tools
 from .tools import AgentTool, Tool, ToolCall
 
 __all__ = [
     "AgentTool",
-    "build_tools",
+    "build_usable_tools",
     "chat_non_stream",
     "chat_stream",
     "chat_tool",
     "ChatResponse",
     "OllamaModels",
+    "DEFAULT_MODEL",
     "get_model",
     "BaseMessage",
     "HumanMessage",
@@ -48,6 +50,7 @@ __all__ = [
     "DEFAULT_PRESENCE_PENALTY",
     "ConversationEvent",
     "MessageEvent",
+    "StreamChunkEvent",
     "ToolCallEvent",
     "ToolResultEvent",
     "LoopCompleteEvent",

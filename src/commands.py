@@ -1,6 +1,8 @@
-from src.ImageGen import ImageRequest, generate_image
+import time
+
+from src.ImageGen import DEFAULT_IMAGE_MODEL, ImageRequest, generate_image
 from src.ImageGen.models import get_model as get_image_model
-from src.LLM import HumanMessage, SystemMessage, chat_non_stream, chat_stream
+from src.LLM import DEFAULT_MODEL, HumanMessage, SystemMessage, chat_non_stream, chat_stream
 from src.LLM.messages import AssistantMessage, BaseMessage
 from src.LLM.models import get_model
 
@@ -40,7 +42,7 @@ async def handle_chat(
 
 async def ask(
     question: str,
-    model_name: str = "qwen3:8b",
+    model_name: str = DEFAULT_MODEL.value,
     stream: bool = False,
     think: bool | None = None,
 ) -> None:
@@ -49,7 +51,7 @@ async def ask(
 
 
 async def chat_cli(
-    model_name: str = "qwen3:8b",
+    model_name: str = DEFAULT_MODEL.value,
     system_prompt: str | None = None,
     stream: bool = False,
     think: bool | None = None,
@@ -81,12 +83,9 @@ async def chat_cli(
             conversation.pop()
 
 
-import time
-
-
 async def handle_image_gen(
     prompt: str,
-    model_name: str = "x/flux2-klein:4b",
+    model_name: str = DEFAULT_IMAGE_MODEL.value,
     steps: int = 4,
     negative_prompt: str | None = None,
 ) -> None:

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from .constants import DEFAULT_IMAGE_OUTPUT_DIR
@@ -7,14 +8,20 @@ from .models import ImageModels
 from .types import ImageRequest, ImageResponse
 
 
+def _get_project_root() -> Path:
+    env_root = os.environ.get("AI_FUN_ROOT")
+    if env_root:
+        return Path(env_root)
+    return Path.cwd()
+
+
 async def generate_image(
     model: ImageModels,
     request: ImageRequest,
     save_dir: str = DEFAULT_IMAGE_OUTPUT_DIR,
     use_cli: bool = True,
 ) -> ImageResponse:
-    current_file = Path(__file__)
-    project_root = current_file.parent.parent.parent
+    project_root = _get_project_root()
     output_dir = project_root / save_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 

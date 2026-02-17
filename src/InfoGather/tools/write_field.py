@@ -1,18 +1,10 @@
-from collections.abc import Awaitable, Callable
+from src.InfoGather.tools.base import InfoBookTool
 
-from src.InfoGather.info_book import InfoBook
-from src.LLM.tools import AgentTool
+SUCCESS_MESSAGE = "Successfully wrote '{value}' to field '{field_name}'"
+ERROR_FIELD_NOT_EXIST = "Error: Field '{field_name}' does not exist"
 
 
-class WriteFieldTool(AgentTool):
-    def __init__(
-        self,
-        info_book: InfoBook,
-        input_handler: Callable[[str, dict], str | Awaitable[str]],
-    ):
-        self.info_book = info_book
-        self.input_handler = input_handler
-
+class WriteFieldTool(InfoBookTool):
     @property
     def name(self) -> str:
         return "write_field"
@@ -31,10 +23,10 @@ class WriteFieldTool(AgentTool):
         """
         error = self.info_book.set_field_value(field_name, value)
         if error is None:
-            return f"Successfully wrote '{value}' to field '{field_name}'"
+            return SUCCESS_MESSAGE.format(value=value, field_name=field_name)
 
         field = self.info_book.get_field(field_name)
         if not field:
-            return f"Error: Field '{field_name}' does not exist"
+            return ERROR_FIELD_NOT_EXIST.format(field_name=field_name)
 
         return f"Error: {error}"

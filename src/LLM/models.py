@@ -10,6 +10,9 @@ class OllamaModels(Enum):
         return self.value
 
 
+DEFAULT_MODEL = OllamaModels.QWEN_8B
+
+
 def get_model(model_name: str) -> OllamaModels:
     for m in OllamaModels:
         if m.to_ollama_name() == model_name:
@@ -17,4 +20,5 @@ def get_model(model_name: str) -> OllamaModels:
     for m in OllamaModels:
         if model_name.lower() in m.to_ollama_name().lower():
             return m
+    print(f"ERROR - Model '{model_name}' not found, using default: {OllamaModels.QWEN_8B.value}")
     return OllamaModels.QWEN_8B

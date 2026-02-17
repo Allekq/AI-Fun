@@ -51,7 +51,7 @@ def build_options(
     return options
 
 
-def build_tools(tools: list[Tool] | None) -> list[dict[str, Any]] | None:
+def build_tools_for_chat_format(tools: list[Tool] | None) -> list[dict[str, Any]] | None:
     if tools is None:
         return None
     return [
@@ -98,9 +98,18 @@ def to_chat_response(
                         if isinstance(arguments_str, str)
                         else arguments_str
                     )
-                except (json.JSONDecodeError, TypeError):
+                except (json.JSONDecodeError, TypeError) as e:
+                    print(f"ERROR - Failed to parse tool arguments for {tool_name}: {e}")
                     arguments = {}
-                tool_calls.append(ToolCall(tool=tool_map[tool_name], arguments=arguments))
+                tool_calls.append(
+                    ToolCall(
+                        id=raw_call.get("id", ""),
+                        tool=tool_map[tool_name],
+                        arguments=arguments,
+                    )
+                )
+            else:
+                print(f"ERROR - Tool '{tool_name}' not found in available tools")
 
     return ChatResponse(
         content=content,
@@ -147,7 +156,7 @@ def build_chat_input(
         think=think,
     )
 
-    ollama_tools = build_tools(tools)
+    ollama_tools = build_tools_for_chat_format(tools)
     ollama_messages = transform_messages(messages)
     ollama_format = build_format(format)
 

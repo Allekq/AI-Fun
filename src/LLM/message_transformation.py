@@ -12,18 +12,16 @@ class _OllamaMessage(TypedDict):
 def validate_message(message: BaseMessage) -> None:
     if not isinstance(message.content, str):
         raise TypeError("Message content must be a string")
-    if not message.content:
-        raise ValueError("Message content cannot be empty")
+    if message.role in ("user", "system") and not message.content:
+        raise ValueError("Message content cannot be empty for user/system messages")
     if message.name is not None and not isinstance(message.name, str):
         raise TypeError("Message name must be a string or None")
 
 
 def validate_messages(messages: list[BaseMessage]) -> None:
-    if not isinstance(messages, list):
-        raise TypeError("Messages must be a list")
     if not messages:
         raise ValueError("Messages list cannot be empty")
-    for i, msg in enumerate(messages):
+    for msg in messages:
         validate_message(msg)
 
 

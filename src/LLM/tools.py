@@ -14,6 +14,7 @@ class Tool:
 
 @dataclass
 class ToolCall:
+    id: str
     tool: Tool
     arguments: dict
 
@@ -163,7 +164,7 @@ class AgentTool(ABC):
         return self._parameters
 
     @abstractmethod
-    async def execute(self, *args: Any, **kwargs: Any) -> str:  # type: ignore[no-untyped-def]
+    async def execute(self, *args: Any, **kwargs: Any) -> str:
         pass
 
     def to_tool(self) -> "Tool":

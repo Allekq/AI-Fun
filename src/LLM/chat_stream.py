@@ -59,7 +59,6 @@ async def chat_stream(
     think: bool | None = None,
     format: type[BaseModel] | None = None,
 ) -> AsyncGenerator[ChatResponse, None]:
-    tools_to_pass = tools
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
@@ -70,7 +69,7 @@ async def chat_stream(
         frequency_penalty=frequency_penalty,
         presence_penalty=presence_penalty,
         seed=seed,
-        tools=tools_to_pass,
+        tools=tools,
         think=think,
         format=format,
     )
@@ -82,47 +81,7 @@ async def chat_stream(
         tools=ollama_tools,
         format=ollama_format,
     ):
-        response = to_chat_response(chunk, tools=tools_to_pass)
+        response = to_chat_response(chunk, tools=tools)
         if chunk.get("done") and format:
             response.parsed = format.model_validate_json(response.content)
         yield response
-
-
-async def _chat_stream_single(
-    model: str,
-    messages: list[dict[str, Any]],
-    options: dict[str, Any],
-    tools: list[dict[str, Any]] | None,
-    format: dict[str, Any] | None,
-) -> dict[str, Any]:
-    full_response: dict[str, Any] = {}
-
-    async def _call():
-        stream = ollama.chat(
-            model=model,
-            messages=messages,
-            options=options,
-            tools=tools,
-            format=format,
-            stream=True,
-        )
-        for chunk in stream:
-            for key, value in chunk.items():
-                if value is not None:
-                    if key not in full_response:
-                        full_response[key] = value
-                    elif key == "message":
-                        if "message" not in full_response:
-                            full_response["message"] = {}
-                        msg = chunk.get("message", {})
-                        for msg_key, msg_value in msg.items():
-                            if msg_value is not None:
-                                if msg_key == "content":
-                                    full_response["message"][msg_key] = (
-                                        full_response["message"].get(msg_key) or ""
-                                    ) + (msg_value or "")
-                                else:
-                                    full_response["message"][msg_key] = msg_value
-
-    await asyncio.to_thread(_call)
-    return full_response

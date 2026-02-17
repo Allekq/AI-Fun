@@ -1,18 +1,17 @@
-from collections.abc import Awaitable, Callable
+from src.InfoGather.tools.base import InfoBookTool
 
-from src.InfoGather.info_book import InfoBook
-from src.LLM.tools import AgentTool
+FIELD_SECTION_START = "=== Field: {field_name} ==="
+FIELD_DESCRIPTION = "Description: {description}"
+FIELD_REQUIRED = "Required: {yes_no}"
+FIELD_FILL_GUIDANCE = "Fill guidance: {guidance}"
+FIELD_FALLBACK_ENABLED = "Fallback AI enabled: {yes_no}"
+FIELD_FALLBACK_DEFAULT = "Fallback default: {default}"
+FIELD_FILLED = "Filled: {yes_no}"
+FIELD_CURRENT_VALUE = "Current value: {value}"
+NOT_SET = "(not set)"
 
 
-class GetFieldInfoTool(AgentTool):
-    def __init__(
-        self,
-        info_book: InfoBook,
-        input_handler: Callable[[str, dict], str | Awaitable[str]],
-    ):
-        self.info_book = info_book
-        self.input_handler = input_handler
-
+class GetFieldInfoTool(InfoBookTool):
     @property
     def name(self) -> str:
         return "get_field_info"
@@ -32,13 +31,15 @@ class GetFieldInfoTool(AgentTool):
         if not field:
             return f"Error: Field '{field_name}' does not exist"
 
-        lines = [f"=== Field: {field.name} ==="]
-        lines.append(f"Description: {field.description}")
-        lines.append(f"Required: {'Yes' if field.required else 'No'}")
-        lines.append(f"Fill guidance: {field.fill_guidance}")
-        lines.append(f"Fallback AI enabled: {'Yes' if field.fallback_ai_enabled else 'No'}")
+        lines = [FIELD_SECTION_START.format(field_name=field.name)]
+        lines.append(FIELD_DESCRIPTION.format(description=field.description))
+        lines.append(FIELD_REQUIRED.format(yes_no="Yes" if field.required else "No"))
+        lines.append(FIELD_FILL_GUIDANCE.format(guidance=field.fill_guidance))
+        lines.append(
+            FIELD_FALLBACK_ENABLED.format(yes_no="Yes" if field.fallback_ai_enabled else "No")
+        )
         if field.fallback_default:
-            lines.append(f"Fallback default: {field.fallback_default}")
-        lines.append(f"Filled: {'Yes' if field.is_filled() else 'No'}")
-        lines.append(f"Current value: {field.value or '(not set)'}")
+            lines.append(FIELD_FALLBACK_DEFAULT.format(default=field.fallback_default))
+        lines.append(FIELD_FILLED.format(yes_no="Yes" if field.is_filled() else "No"))
+        lines.append(FIELD_CURRENT_VALUE.format(value=field.value or NOT_SET))
         return "\n".join(lines)
