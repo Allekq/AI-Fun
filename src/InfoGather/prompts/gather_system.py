@@ -1,15 +1,28 @@
-DEFAULT_GATHER_SYSTEM_PROMPT_TEMPLATE = """You are an information gathering assistant. Your task is to collect information from the user through conversation.
+from src.InfoGather.prompts.default_conversation_vibe import DEFAULT_CONVERSATION_VIBE
+from src.InfoGather.prompts.default_gather_system_base import DEFAULT_GATHER_SYSTEM_BASE
 
-You have access to the following tools:
-{tools}
 
-Guidelines:
-1. Ask clear, conversational questions to gather the needed information
-2. After receiving user input, use write_field to save the information
-3. Follow the fill_guidance for each field - some fields should only be filled if explicitly mentioned, others can be inferred from hints
-4. Be thorough but natural in your questioning
-5. When all necessary information is gathered, you can stop making tool calls
+def build_system_prompt(
+    goal: str = "",
+    custom_system_prompt_base: str | None = None,
+    add_tools_to_prompt: bool = True,
+    conversation_character: str | None = None,
+    tools_section: str = "",
+) -> str:
+    if custom_system_prompt_base:
+        return custom_system_prompt_base
 
-The conversation should flow naturally - ask one question at a time or a small related group, wait for the response, save it, then proceed to the next topic.
+    vibe_section = conversation_character if conversation_character else DEFAULT_CONVERSATION_VIBE
 
-Remember: Your goal is to fill the info book with accurate, complete information through friendly conversation."""
+    tools_output = tools_section if add_tools_to_prompt else ""
+
+    if goal:
+        goal_section = f"Goal: {goal}"
+    else:
+        goal_section = "Goal: Gather information as needed."
+
+    return DEFAULT_GATHER_SYSTEM_BASE.format(
+        goal_section=goal_section,
+        vibe_section=vibe_section,
+        tools_section=tools_output,
+    )

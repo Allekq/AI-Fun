@@ -1,24 +1,28 @@
 import asyncio
-from typing import Any
 
 from src.ImageGen import ImageModels, generate_image
+from src.ImageGen.models import get_model as get_image_model
 from src.ImageGen.types import ImageRequest
-from src.InfoGather import gather_conversation_simple
+from src.InfoGather import InputHandler, gather_conversation_simple
 from src.LLM import OllamaModels
+from src.LLM.models import get_model as get_llm_model
 
 from .logo_info_book import create_logo_info_book
 from .prompt_builder import build_logo_prompt
 
 
-async def input_handler(question: str, field_metadata: dict[str, Any]) -> str:
+async def input_handler(question: str) -> str:
     print(f"\n{question}")
     return input("Your answer: ")
 
 
 async def run_logo_minigame(
-    llm_model: OllamaModels = OllamaModels.QWEN_8B,
-    image_model: ImageModels = ImageModels.FLUX_KLEIN_4B,
+    chat_model: str = "qwen3:8b",
+    image_model: str = "x/flux2-klein:4b",
 ) -> str | None:
+    llm_model = get_llm_model(chat_model)
+    img_model = get_image_model(image_model)
+
     print("=" * 50)
     print("  COMPANY LOGO GENERATOR")
     print("=" * 50)
@@ -51,7 +55,7 @@ async def run_logo_minigame(
     )
 
     response = await generate_image(
-        model=image_model,
+        model=img_model,
         request=request,
     )
 

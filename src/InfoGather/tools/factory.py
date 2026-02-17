@@ -5,6 +5,7 @@ from src.LLM import Tool
 from src.LLM.tool_factory import build_usable_tools as llm_build_tools
 from src.LLM.tools import AgentTool
 
+from src.InfoGather.constants import InputHandler
 from ..info_book import InfoBook
 from .ask_user import AskUserTool
 from .get_field_info import GetFieldInfoTool
@@ -14,7 +15,7 @@ from .write_field import WriteFieldTool
 
 def build_tools_from_info_book(
     info_book: InfoBook,
-    input_handler: Callable[[str, dict[str, Any]], str | Awaitable[str]],
+    input_handler: InputHandler,
     extra_tools: list[AgentTool] | None = None,
 ) -> tuple[list[Tool], dict[str, Callable[..., Awaitable[str]]]]:
     tool_instances: list[AgentTool] = [

@@ -1,5 +1,6 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable
 
+from src.InfoGather.constants import InputHandler
 from src.InfoGather.info_book import InfoBook
 from src.InfoGather.tools.base import InfoBookTool
 
@@ -8,7 +9,7 @@ class AskUserTool(InfoBookTool):
     def __init__(
         self,
         info_book: InfoBook,
-        input_handler: Callable[str, str | Awaitable[str]],
+        input_handler: InputHandler,
     ):
         super().__init__(info_book)
         self.input_handler = input_handler

@@ -14,32 +14,21 @@ from src.LLM import (
 )
 from src.LLM.tools import AgentTool, describe_tools_for_prompt
 
+from src.InfoGather.constants import InputHandler
 from .info_book import InfoBook
 from .info_book_fallback import fill_unfilled_fields
-from .prompts.gather_system import DEFAULT_GATHER_SYSTEM_PROMPT_TEMPLATE
+from .prompts.gather_system import build_system_prompt
 from .tools.factory import build_tools_from_info_book
-
-
-def build_system_prompt(
-    custom_prompt: str | None = None,
-    extra_tools: list[AgentTool] | None = None,
-) -> str:
-    if custom_prompt:
-        return custom_prompt
-
-    tools_section = ""
-    if extra_tools:
-        tools_section = describe_tools_for_prompt(extra_tools)
-
-    return DEFAULT_GATHER_SYSTEM_PROMPT_TEMPLATE.format(tools=tools_section)
 
 
 async def gather_conversation(
     info_book: InfoBook,
     model: OllamaModels,
-    input_handler: Callable[[str, dict[str, Any]], str | Awaitable[str]],
+    input_handler: InputHandler,
     initial_prompt: str | None = None,
-    custom_system_prompt: str | None = None,
+    custom_system_prompt_base: str | None = None,
+    add_tools_to_prompt: bool = True,
+    conversation_character: str | None = None,
     callbacks: list[Callable[[ConversationEvent], Awaitable[None]]] | None = None,
     stream: bool = False,
     extra_tools: list[AgentTool] | None = None,
@@ -51,9 +40,11 @@ async def gather_conversation(
     Args:
         info_book: The InfoBook to fill with gathered information
         model: The Ollama model to use
-        input_handler: Async/sync callable that takes (question, field_metadata) and returns user's answer
+        input_handler: Async/sync callable that takes (question) and returns user's answer
         initial_prompt: Optional initial message to start the conversation
-        custom_system_prompt: Optional custom system prompt. If provided, used exclusively (no default added)
+        custom_system_prompt_base: Custom base system prompt. If provided, used exclusively (no default added)
+        add_tools_to_prompt: Whether to include tool descriptions in the system prompt
+        conversation_character: String defining the style/vibe of questioning
         callbacks: Optional list of async callbacks for conversation events
         stream: Whether to use streaming mode
         extra_tools: Optional list of additional AgentTools to include
@@ -62,7 +53,17 @@ async def gather_conversation(
     Returns:
         Tuple of (filled InfoBook, list of ChatResponse from each turn)
     """
-    system_prompt = build_system_prompt(custom_system_prompt, extra_tools)
+    tools_section = ""
+    if extra_tools:
+        tools_section = describe_tools_for_prompt(extra_tools)
+
+    system_prompt = build_system_prompt(
+        goal=info_book.goal,
+        custom_system_prompt_base=custom_system_prompt_base,
+        add_tools_to_prompt=add_tools_to_prompt,
+        conversation_character=conversation_character,
+        tools_section=tools_section,
+    )
 
     messages: list[BaseMessage] = [
         SystemMessage(content=system_prompt),
@@ -115,7 +116,7 @@ async def gather_conversation(
 async def gather_conversation_simple(
     info_book: InfoBook,
     model: OllamaModels,
-    input_handler: Callable[[str, dict[str, Any]], str | Awaitable[str]],
+    input_handler: InputHandler,
     **kwargs: Any,
 ) -> tuple[InfoBook, list[ChatResponse]]:
     """

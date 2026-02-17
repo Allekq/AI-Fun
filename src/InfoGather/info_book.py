@@ -6,6 +6,7 @@ from .info_gather_field import InfoGatherField
 
 @dataclass
 class InfoBook:
+    goal: str = ""
     info: list[InfoGatherField] = field(default_factory=list)
 
     def get_field(self, name: str) -> InfoGatherField | None:
@@ -59,6 +60,7 @@ class InfoBook:
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "goal": self.goal,
             "fields": self.get_field_schemas(),
             "is_complete": self.is_complete(),
         }

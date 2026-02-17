@@ -3,15 +3,34 @@ from src.InfoGather.info_gather_field import (
     StringField,
     FILL_IF_EXPLICIT,
     FILL_IF_HINTED,
+    FILL_WITH_DEFAULT,
 )
+
+from .constants import (
+    FIELD_BACKSTORY,
+    FIELD_BRAND_PERSONALITY,
+    FIELD_COLOR_PREFERENCES,
+    FIELD_COMPANY_GOALS,
+    FIELD_COMPANY_NAME,
+    FIELD_COMPANY_VALUES,
+    FIELD_INDUSTRY,
+    FIELD_MOTTO,
+    FIELD_ORIGIN,
+    FIELD_OWNER_NAME,
+    FIELD_PRIMARY_PRODUCT,
+    FIELD_STYLE,
+    FIELD_TARGET_AUDIENCE,
+)
+
+LOGO_GOAL = "Gather the information necessary to generate a company logo that fits the user's desires and the company's nature."
 
 
 def create_logo_info_book() -> InfoBook:
-    info_book = InfoBook()
+    info_book = InfoBook(goal=LOGO_GOAL)
 
     info_book.add_field(
         StringField(
-            name="company_name",
+            name=FIELD_COMPANY_NAME,
             description="What is the name of the company?",
             required=True,
             fill_guidance=FILL_IF_EXPLICIT,
@@ -20,7 +39,7 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="industry",
+            name=FIELD_INDUSTRY,
             description="What industry is the company in? (tech, food, fashion, finance, healthcare, education, entertainment, etc.)",
             required=True,
             fill_guidance=FILL_IF_EXPLICIT,
@@ -29,7 +48,7 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="brand_personality",
+            name=FIELD_BRAND_PERSONALITY,
             description="What is the brand personality? (playful, professional, luxury, eco-friendly, innovative, friendly, bold, sophisticated, etc.)",
             required=True,
             fill_guidance=FILL_IF_EXPLICIT,
@@ -38,7 +57,7 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="style",
+            name=FIELD_STYLE,
             description="What design style should the logo have? (modern, vintage, minimalist, bold, elegant, artistic, corporate, playful, etc.)",
             required=True,
             fill_guidance=FILL_IF_EXPLICIT,
@@ -47,7 +66,16 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="origin",
+            name=FIELD_COLOR_PREFERENCES,
+            description="Are there any color preferences? (e.g., blue and white, warm colors, dark theme, etc.)",
+            required=False,
+            fill_guidance=FILL_IF_EXPLICIT,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_ORIGIN,
             description="Where is the company from? (city/country)",
             required=False,
             fill_guidance=FILL_IF_HINTED,
@@ -56,7 +84,7 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="backstory",
+            name=FIELD_BACKSTORY,
             description="What is the company's backstory or founding story?",
             required=False,
             fill_guidance=FILL_IF_HINTED,
@@ -65,7 +93,7 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="motto",
+            name=FIELD_MOTTO,
             description="Does the company have a motto or tagline?",
             required=False,
             fill_guidance=FILL_IF_HINTED,
@@ -74,7 +102,7 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="target_audience",
+            name=FIELD_TARGET_AUDIENCE,
             description="Who is the target audience? (businesses, young adults, families, children, seniors, etc.)",
             required=False,
             fill_guidance=FILL_IF_HINTED,
@@ -83,16 +111,7 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="color_preferences",
-            description="Are there any color preferences? (e.g., blue and white, warm colors, dark theme, etc.)",
-            required=False,
-            fill_guidance=FILL_IF_HINTED,
-        )
-    )
-
-    info_book.add_field(
-        StringField(
-            name="primary_product",
+            name=FIELD_PRIMARY_PRODUCT,
             description="What is the primary product or service?",
             required=False,
             fill_guidance=FILL_IF_HINTED,
@@ -101,7 +120,7 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="company_values",
+            name=FIELD_COMPANY_VALUES,
             description="What are the core company values? (innovation, sustainability, quality, community, etc.)",
             required=False,
             fill_guidance=FILL_IF_HINTED,
@@ -110,7 +129,7 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="owner_name",
+            name=FIELD_OWNER_NAME,
             description="What is the founder or owner's name?",
             required=False,
             fill_guidance=FILL_IF_HINTED,
@@ -119,7 +138,7 @@ def create_logo_info_book() -> InfoBook:
 
     info_book.add_field(
         StringField(
-            name="company_goals",
+            name=FIELD_COMPANY_GOALS,
             description="What are the company's main goals?",
             required=False,
             fill_guidance=FILL_IF_HINTED,

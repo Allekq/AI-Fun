@@ -5,6 +5,7 @@ from src.ImageGen.models import get_model as get_image_model
 from src.LLM import DEFAULT_MODEL, HumanMessage, SystemMessage, chat_non_stream, chat_stream
 from src.LLM.messages import AssistantMessage, BaseMessage
 from src.LLM.models import get_model
+from src.constants import COMPANY_LOGO_COMMAND
 from src.minigames.company_logo import run_logo_minigame
 
 
@@ -116,5 +117,8 @@ async def handle_image_gen(
         print(f"\nError generating image: {e}")
 
 
-async def handle_company_logo() -> None:
-    await run_logo_minigame()
+async def handle_company_logo(
+    chat_model: str = "qwen3:8b",
+    image_model: str = "x/flux2-klein:4b",
+) -> None:
+    await run_logo_minigame(chat_model, image_model)
