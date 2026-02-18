@@ -36,7 +36,7 @@ async def run_logo_minigame(
 
     info_book = create_logo_info_book()
 
-    info_book, gather_conversation = await gather_conversation(
+    info_book, conversation = await gather_conversation(
         info_book=info_book,
         model=llm_model,
         input_handler=input_handler,
@@ -44,10 +44,10 @@ async def run_logo_minigame(
 
 
     log_info_book(LOG_NAME, info_book)
-    log_conversation(LOG_NAME, gather_conversation)
+    log_conversation(LOG_NAME, conversation)
 
-    if gather_conversation and isinstance(gather_conversation[-1], AssistantMessage):
-        last_msg = cast(AssistantMessage, gather_conversation[-1])
+    if conversation and isinstance(conversation[-1], AssistantMessage):
+        last_msg = cast(AssistantMessage, conversation[-1])
         print(f"\n[DEBUG] Last assistant message: {last_msg.content[:100]}...")
 
     if not info_book.is_complete():
