@@ -1,8 +1,8 @@
-from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
 from src.InfoGather.constants import InputHandler
 from src.LLM import (
+    AgentTool,
     BaseMessage,
     HumanMessage,
     OllamaModels,
@@ -13,12 +13,15 @@ from src.LLM import (
 from src.LLM import (
     chat_tool as llm_chat_tool,
 )
-from src.LLM.tools import AgentTool, describe_tools_for_prompt
+from src.LLM.tools import describe_tools_for_prompt
 
 from .info_book import InfoBook
 from .info_book_fallback import fill_unfilled_fields
 from .prompts.gather_system import build_system_prompt
-from .tools.factory import build_tools_from_info_book
+from .tools.ask_user import AskUserTool
+from .tools.get_field_info import GetFieldInfoTool
+from .tools.view_book import ViewBookTool
+from .tools.write_field import WriteFieldTool
 
 
 class QuestionLimitMiddleware(ToolLoopMiddleware):
@@ -128,11 +131,14 @@ async def gather_conversation(
                 )
             )
 
-    tools, tool_handlers = build_tools_from_info_book(
-        info_book=info_book,
-        input_handler=input_handler,
-        extra_tools=extra_tools,
-    )
+    tools: list[AgentTool] = [
+        AskUserTool(info_book=info_book, input_handler=input_handler),
+        WriteFieldTool(info_book=info_book),
+        ViewBookTool(info_book=info_book),
+        GetFieldInfoTool(info_book=info_book),
+    ]
+    if extra_tools:
+        tools.extend(extra_tools)
 
     question_middleware: ToolLoopMiddleware = QuestionLimitMiddleware(
         limit=question_limit, warn_at=warn_at_question
@@ -144,8 +150,7 @@ async def gather_conversation(
     additions = await llm_chat_tool(
         model=model,
         messages=cast(list[BaseMessage], messages),
-        tools=tools,
-        tool_handlers=tool_handlers,
+        agent_tools=tools,
         stream=stream,
         middleware=all_middleware,
         **chat_kwargs,

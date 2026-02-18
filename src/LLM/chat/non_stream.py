@@ -1,5 +1,4 @@
 import asyncio
-from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any, cast
 
 import ollama
@@ -89,7 +88,7 @@ async def chat_non_stream_no_tool(
         format=ollama_format,
     )
 
-    return to_message(response, tools=None, format=format)
+    return cast(AssistantMessage, to_message(response, tools=None, format=format))
 
 
 async def chat_non_stream(
@@ -152,14 +151,14 @@ async def chat_non_stream(
 
     # Step 2: Execute tool calls if agent_tools provided and tools present
     tool_messages: list[ToolMessage] = []
-    if agent_tools and assistant_msg.tool_calls:
+    if agent_tools and isinstance(assistant_msg, AssistantMessage) and assistant_msg.tool_calls:
         from .tool_usage import execute_tool_calls
 
         tool_messages = await execute_tool_calls(
-            assistant_msg=assistant_msg,
+            assistant_msg=cast(AssistantMessage, assistant_msg),
             agent_tools=agent_tools,
             tool_usage_context=tool_usage_context,
             middleware=middleware,
         )
 
-    return assistant_msg, tool_messages
+    return cast(AssistantMessage, assistant_msg), tool_messages

@@ -1,5 +1,5 @@
 from src.InfoGather.info_book import InfoBook
-from src.LLM.tools import AgentTool
+from src.LLM import AgentTool
 
 
 class InfoBookTool(AgentTool):

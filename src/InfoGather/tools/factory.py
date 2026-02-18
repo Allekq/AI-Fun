@@ -1,8 +1,7 @@
 from collections.abc import Awaitable, Callable
 
 from src.InfoGather.constants import InputHandler
-from src.LLM import Tool
-from src.LLM.tools import AgentTool
+from src.LLM import AgentTool, Tool
 from src.LLM.tools.factory import build_usable_tools as llm_build_tools
 
 from ..info_book import InfoBook
@@ -17,6 +16,15 @@ def build_tools_from_info_book(
     input_handler: InputHandler,
     extra_tools: list[AgentTool] | None = None,
 ) -> tuple[list[Tool], dict[str, Callable[..., Awaitable[str]]]]:
+    tool_instances = build_agent_tools_from_info_book(info_book, input_handler, extra_tools)
+    return llm_build_tools(tool_instances)
+
+
+def build_agent_tools_from_info_book(
+    info_book: InfoBook,
+    input_handler: InputHandler,
+    extra_tools: list[AgentTool] | None = None,
+) -> list[AgentTool]:
     tool_instances: list[AgentTool] = [
         AskUserTool(info_book=info_book, input_handler=input_handler),
         WriteFieldTool(info_book=info_book),
@@ -25,4 +33,4 @@ def build_tools_from_info_book(
     ]
     if extra_tools:
         tool_instances.extend(extra_tools)
-    return llm_build_tools(tool_instances)
+    return tool_instances

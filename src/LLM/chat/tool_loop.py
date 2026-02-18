@@ -1,5 +1,4 @@
-from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -17,7 +16,7 @@ from ..models.models import OllamaModels
 # Late binding to avoid circular imports
 if TYPE_CHECKING:
     from ..models.tool_context import ToolLoopMiddleware, ToolUsageContext
-    from ..tools.base import Tool, AgentTool
+    from ..tools.base import AgentTool, Tool
 
 __all__ = [
     "chat_tool",

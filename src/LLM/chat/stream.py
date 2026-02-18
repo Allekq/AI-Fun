@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import AsyncGenerator, Awaitable, Callable
+from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING, Any, cast
 
 import ollama
@@ -161,11 +161,11 @@ async def chat_stream(
     assistant_msg = to_message(last_chunk, tools=tools, format=format)
 
     # Step 3: Execute tool calls if agent_tools provided and tools present
-    if agent_tools and assistant_msg.tool_calls:
+    if agent_tools and isinstance(assistant_msg, AssistantMessage) and assistant_msg.tool_calls:
         from .tool_usage import execute_tool_calls
 
         tool_messages = await execute_tool_calls(
-            assistant_msg=assistant_msg,
+            assistant_msg=cast(AssistantMessage, assistant_msg),
             agent_tools=agent_tools,
             tool_usage_context=tool_usage_context,
             middleware=middleware,

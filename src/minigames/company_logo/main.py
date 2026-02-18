@@ -4,7 +4,7 @@ from src.ImageGen import generate_image
 from src.ImageGen.models import get_model as get_image_model
 from src.ImageGen.types import ImageRequest
 from src.InfoGather import gather_conversation_simple
-from src.LLM.models import get_model as get_llm_model
+from src.LLM import get_model as get_llm_model
 
 from .logo_info_book import create_logo_info_book
 from .prompt_builder import build_logo_prompt

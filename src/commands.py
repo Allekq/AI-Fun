@@ -2,9 +2,16 @@ import time
 
 from src.ImageGen import DEFAULT_IMAGE_MODEL, ImageRequest, generate_image
 from src.ImageGen.models import get_model as get_image_model
-from src.LLM import DEFAULT_MODEL, HumanMessage, SystemMessage, chat_non_stream, chat_stream
-from src.LLM.models import get_model
-from src.LLM.models.messages import AssistantMessage, BaseMessage
+from src.LLM import (
+    DEFAULT_MODEL,
+    AssistantMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    chat_non_stream_no_tool,
+    chat_stream,
+    get_model,
+)
 from src.minigames.company_logo import run_logo_minigame
 
 
@@ -34,13 +41,9 @@ async def handle_chat(
             if isinstance(response, AssistantMessage) and response.done:
                 print("\n")
     else:
-        response = await chat_non_stream(model=model, messages=messages, think=think)
-        if isinstance(response, AssistantMessage):
-            print(response.content)
-            accumulated_content = response.content
-        else:
-            print(response.content)
-            accumulated_content = response.content
+        response = await chat_non_stream_no_tool(model=model, messages=messages, think=think)
+        print(response.content)
+        accumulated_content = response.content
 
     return accumulated_content
 

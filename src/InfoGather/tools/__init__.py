@@ -1,4 +1,4 @@
-from src.LLM.tools import AgentTool
+from src.LLM import AgentTool
 
 from .ask_user import AskUserTool
 from .factory import build_tools_from_info_book

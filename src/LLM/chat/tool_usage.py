@@ -1,11 +1,10 @@
 import inspect
-from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..models.messages import AssistantMessage, ToolMessage
+    from ..models.tool_context import ToolLoopMiddleware, ToolUsageContext
     from ..tools.base import AgentTool
-    from .tool_context import ToolLoopMiddleware, ToolUsageContext
 
 
 async def execute_tool_calls(

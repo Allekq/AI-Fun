@@ -8,7 +8,7 @@ from src.LLM import (
     HumanMessage,
     OllamaModels,
     ToolMessage,
-    chat_non_stream,
+    chat_non_stream_no_tool,
 )
 
 CANNOT_INFER = "CANNOT_INFER"
@@ -54,20 +54,20 @@ def _format_conversation(messages: list[BaseMessage]) -> str:
     for msg in messages:
         role = msg.role
         content = msg.content
-        
+
         if isinstance(msg, AssistantMessage):
             if content:
                 lines.append(f"{role}: {content}")
             if msg.tool_calls:
                 for tc in msg.tool_calls:
                     lines.append(f"{role} (tool call): {tc.tool.name}({tc.arguments})")
-        
+
         elif isinstance(msg, ToolMessage):
             lines.append(f"tool result ({msg.tool_name}): {content}")
-        
+
         else:
             lines.append(f"{role}: {content}")
-            
+
     return "\n".join(lines)
 
 
@@ -89,7 +89,7 @@ async def fill_unfilled_fields(
         conversation=conversation,
     )
 
-    response = await chat_non_stream(
+    response = await chat_non_stream_no_tool(
         model=model,
         messages=[HumanMessage(content=prompt)],
         format=FallbackResponse,

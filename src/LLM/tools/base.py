@@ -1,6 +1,7 @@
 import inspect
 import types
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Annotated, Any, Union, get_args, get_origin
 
@@ -174,6 +175,14 @@ class AgentTool(ABC):
     @abstractmethod
     async def execute(self, *args: Any, **kwargs: Any) -> str:
         pass
+
+    def get_handler(self) -> Callable[..., Awaitable[str]]:
+        """Return a callable handler for this tool."""
+
+        async def handler(*args: Any, **kwargs: Any) -> str:
+            return await self.execute(*args, **kwargs)
+
+        return handler
 
     def to_tool(self) -> "Tool":
         return Tool(
