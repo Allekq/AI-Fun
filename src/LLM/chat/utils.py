@@ -76,13 +76,21 @@ def _parse_tool_calls(
         func = raw_call.get("function", {})
         tool_name = func.get("name")
         if tool_name in tool_map:
-            arguments_str = func.get("arguments", "{}")
-            try:
-                arguments = (
-                    json.loads(arguments_str) if isinstance(arguments_str, str) else arguments_str
-                )
-            except (json.JSONDecodeError, TypeError) as e:
-                print(f"ERROR - Failed to parse tool arguments for {tool_name}: {e}")
+            # Robust handling: Ollama can return arguments as either string (JSON) or dict
+            arguments_raw = func.get("arguments", "{}")
+            if isinstance(arguments_raw, str):
+                # Raw JSON string from Ollama server
+                try:
+                    arguments = json.loads(arguments_raw)
+                except json.JSONDecodeError as e:
+                    print(f"ERROR - Failed to parse tool arguments for {tool_name}: {e}")
+                    arguments = {}
+            elif isinstance(arguments_raw, dict):
+                # Already parsed as dict
+                arguments = arguments_raw
+            else:
+                # Unexpected type, fallback to empty dict
+                print(f"ERROR - Unexpected arguments type for {tool_name}: {type(arguments_raw)}")
                 arguments = {}
             tool_calls.append(
                 ToolCall(
