@@ -72,7 +72,7 @@ async def gather_conversation(
     info_book: InfoBook,
     model: OllamaModels,
     input_handler: InputHandler,
-    first_user_message: str | None = None,
+    initial_conversation: list[BaseMessage] | None = None,
     custom_system_prompt_base: str | None = None,
     add_tools_to_prompt: bool = True,
     conversation_character: str | None = None,
@@ -121,8 +121,8 @@ async def gather_conversation(
         SystemMessage(content=system_prompt),
     ]
 
-    if first_user_message:
-        messages.append(HumanMessage(content=first_user_message))
+    if initial_conversation:
+        messages.extend(initial_conversation)
     elif not info_book.is_complete():
         unfilled = info_book.get_unfilled_fields()
         if unfilled:

@@ -5,7 +5,8 @@ from src.ImageGen import generate_image
 from src.ImageGen.models import get_model as get_image_model
 from src.ImageGen.types import ImageRequest
 from src.InfoGather import gather_conversation
-from src.LLM import AssistantMessage, BaseMessage, SystemMessage, get_model as get_llm_model
+from src.LLM import AssistantMessage, BaseMessage, SystemMessage
+from src.LLM import get_model as get_llm_model
 from src.LLM.chat.conversation_logger import log_conversation
 from src.utility.info_book_logger import log_info_book
 
@@ -33,16 +34,12 @@ async def run_logo_minigame(
     print("\nI'll help you create a custom company logo!")
     print("First, let me gather some information about your company, and the logo you would like to create.\n")
 
-    print("\nTell me something about the company, and the logo you would like?")
-    initial_response = input("Info: ")
-
     info_book = create_logo_info_book()
 
     info_book, additions = await gather_conversation(
         info_book=info_book,
         model=llm_model,
         input_handler=input_handler,
-        first_user_message=initial_response,
     )
 
     all_messages: list[BaseMessage] = []

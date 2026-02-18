@@ -29,7 +29,7 @@ def log_conversation(log_name: str, messages: list[BaseMessage]) -> str:
     file_path = LOGS_DIR / file_name
 
     lines = [
-        f"=== CONVERSATION LOG ===",
+        "=== CONVERSATION LOG ===",
         f"Timestamp: {datetime.now().isoformat()}",
         f"Total Messages: {len(messages)}",
         "",
@@ -52,8 +52,11 @@ def log_conversation(log_name: str, messages: list[BaseMessage]) -> str:
         elif isinstance(msg, AssistantMessage):
             tool_calls_str = ""
             if msg.tool_calls:
-                tool_names = [tc.tool.name for tc in msg.tool_calls]
-                tool_calls_str = f" | Tools called: {', '.join(tool_names)}"
+                tool_parts = []
+                for tc in msg.tool_calls:
+                    args_str = str(tc.arguments) if tc.arguments else "{}"
+                    tool_parts.append(f"{tc.tool.name}({args_str})")
+                tool_calls_str = f" | Tools called: {', '.join(tool_parts)}"
             lines.append(
                 f"[{i}] ASSISTANT: {content[:200]}...{tool_calls_str}"
                 if len(content) > 200

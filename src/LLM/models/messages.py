@@ -61,7 +61,7 @@ class AssistantMessage(BaseMessage):
                     "type": "function",
                     "function": {
                         "name": tc.tool.name,
-                        "arguments": tc.arguments,
+                        "arguments": tc.arguments,  # Ollama client expects dict
                     },
                 }
                 for tc in self.tool_calls
