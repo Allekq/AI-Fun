@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from .chat_non_stream import chat_non_stream
-from .chat_stream import chat_stream, chat_stream_raw
-from .chat_tool import (
+from .chat.non_stream import chat_non_stream
+from .chat.stream import chat_stream, chat_stream_raw
+from .chat.tool_loop import (
     ConversationEvent,
     LoopCompleteEvent,
     MessageEvent,
@@ -19,10 +19,15 @@ from .constants import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
 )
-from .messages import AssistantMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
-from .models import DEFAULT_MODEL, OllamaModels, get_model
-from .tool_factory import build_usable_tools
-from .tools import AgentTool, Tool, ToolCall
+from .models.messages import AssistantMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
+from .models.models import DEFAULT_MODEL, OllamaModels, get_model
+from .tools.base import AgentTool, Tool, ToolCall
+from .tools.context import (
+    ContextResult,
+    ToolContext,
+    ToolExecutionResult,
+)
+from .tools.factory import build_usable_tools
 
 __all__ = [
     "AgentTool",
@@ -54,4 +59,7 @@ __all__ = [
     "ToolCallEvent",
     "ToolResultEvent",
     "LoopCompleteEvent",
+    "ContextResult",
+    "ToolContext",
+    "ToolExecutionResult",
 ]

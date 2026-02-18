@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from .constants import (
+from ..constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
     DEFAULT_PRESENCE_PENALTY,
@@ -11,10 +11,10 @@ from .constants import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
 )
-from .message_transformation import transform_messages, validate_messages
-from .messages import AssistantMessage, BaseMessage, ToolMessage
-from .models import OllamaModels
-from .tools import Tool, ToolCall
+from ..models.messages import AssistantMessage, BaseMessage, ToolMessage
+from ..models.models import OllamaModels
+from ..tools.base import Tool, ToolCall
+from .transformation import transform_messages, validate_messages
 
 
 def build_format(format: type[BaseModel] | None) -> dict[str, Any] | None:

@@ -1,6 +1,6 @@
 from typing import Any
 
-from .messages import BaseMessage
+from ..models.messages import BaseMessage
 
 
 def validate_message(message: BaseMessage) -> None:

@@ -2,8 +2,8 @@ from collections.abc import Awaitable, Callable
 
 from src.InfoGather.constants import InputHandler
 from src.LLM import Tool
-from src.LLM.tool_factory import build_usable_tools as llm_build_tools
 from src.LLM.tools import AgentTool
+from src.LLM.tools.factory import build_usable_tools as llm_build_tools
 
 from ..info_book import InfoBook
 from .ask_user import AskUserTool

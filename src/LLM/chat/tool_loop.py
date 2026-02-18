@@ -6,9 +6,7 @@ from typing import Any, Literal
 import ollama
 from pydantic import BaseModel
 
-from .chat_non_stream import _chat_non_stream
-from .chat_utils import build_chat_input, to_message
-from .constants import (
+from ..constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
     DEFAULT_PRESENCE_PENALTY,
@@ -16,9 +14,22 @@ from .constants import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
 )
-from .messages import AssistantMessage, BaseMessage, ToolMessage
-from .models import OllamaModels
-from .tools import Tool
+from ..models.messages import AssistantMessage, BaseMessage, ToolMessage
+from ..models.models import OllamaModels
+from ..tools.base import Tool
+from ..tools.context import ToolContext, ToolExecutionResult
+from .non_stream import _chat_non_stream
+from .utils import build_chat_input, to_message
+
+__all__ = [
+    "ConversationEvent",
+    "MessageEvent",
+    "ToolCallEvent",
+    "ToolResultEvent",
+    "StreamChunkEvent",
+    "LoopCompleteEvent",
+    "chat_tool",
+]
 
 
 async def _chat_stream_generator(
@@ -67,9 +78,6 @@ def StreamChunkEvent(data: Any) -> ConversationEvent:
 
 def LoopCompleteEvent(data: Any) -> ConversationEvent:
     return ConversationEvent(type="loop_complete", data=data)
-
-
-from .context import ToolContext, ToolExecutionResult
 
 
 async def chat_tool(
@@ -184,7 +192,7 @@ async def chat_tool(
                             loop_should_break = True
                     elif result is not None:
                         result_str = str(result)
-                    
+
                 except Exception as e:
                     result_str = f"Error: {str(e)}"
             else:
@@ -195,7 +203,7 @@ async def chat_tool(
                 ctx_result = context.after_tool_execution(tc.tool.name, tc.arguments, raw_result)
                 if not ctx_result.should_continue:
                     loop_should_break = True
-                
+
                 if ctx_result.injections:
                     for injection in ctx_result.injections:
                         # Add injections to ollama messages for next turn

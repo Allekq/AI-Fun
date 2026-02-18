@@ -1,10 +1,9 @@
 import asyncio
 
-from src.ImageGen import ImageModels, generate_image
+from src.ImageGen import generate_image
 from src.ImageGen.models import get_model as get_image_model
 from src.ImageGen.types import ImageRequest
-from src.InfoGather import InputHandler, gather_conversation_simple
-from src.LLM import OllamaModels
+from src.InfoGather import gather_conversation_simple
 from src.LLM.models import get_model as get_llm_model
 
 from .logo_info_book import create_logo_info_book
@@ -59,7 +58,7 @@ async def run_logo_minigame(
         request=request,
     )
 
-    print(f"\nLogo generated successfully!")
+    print("\nLogo generated successfully!")
     print(f"Saved to: {response.image_path}")
 
     return response.image_path

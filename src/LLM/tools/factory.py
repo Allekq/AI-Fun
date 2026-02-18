@@ -1,6 +1,6 @@
 from collections.abc import Awaitable, Callable
 
-from .tools import AgentTool, Tool
+from .base import AgentTool, Tool
 
 
 def build_usable_tools(

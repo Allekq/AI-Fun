@@ -1,7 +1,7 @@
-from typing import Any
+from typing import Any, cast
 
-from src.LLM import HumanMessage, SystemMessage
-from src.LLM.context import ContextResult, ToolContext
+from src.LLM import BaseMessage, SystemMessage
+from src.LLM.tools.context import ContextResult, ToolContext
 
 
 class QuestionLimitContext(ToolContext):
@@ -36,4 +36,6 @@ class QuestionLimitContext(ToolContext):
                 )
             )
 
-        return ContextResult(should_continue=should_continue, injections=injections)
+        return ContextResult(
+            should_continue=should_continue, injections=cast(list[BaseMessage], injections)
+        )

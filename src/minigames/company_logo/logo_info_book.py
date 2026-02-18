@@ -1,9 +1,8 @@
 from src.InfoGather.info_book import InfoBook
 from src.InfoGather.info_gather_field import (
-    StringField,
     FILL_IF_EXPLICIT,
     FILL_IF_HINTED,
-    FILL_WITH_DEFAULT,
+    StringField,
 )
 
 from .constants import (

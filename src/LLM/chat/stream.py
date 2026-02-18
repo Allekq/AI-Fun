@@ -1,12 +1,11 @@
 import asyncio
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, cast
 
 import ollama
 from pydantic import BaseModel
 
-from .chat_utils import build_chat_input, to_message
-from .constants import (
+from ..constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
     DEFAULT_PRESENCE_PENALTY,
@@ -14,9 +13,10 @@ from .constants import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
 )
-from .messages import BaseMessage
-from .models import OllamaModels
-from .tools import Tool
+from ..models.messages import AssistantMessage, BaseMessage, ToolMessage
+from ..models.models import OllamaModels
+from ..tools.base import Tool
+from .utils import build_chat_input, to_message
 
 
 async def _chat_stream_raw(
@@ -54,7 +54,7 @@ async def chat_stream(
     tools: list[Tool] | None = None,
     think: bool | None = None,
     format: type[BaseModel] | None = None,
-) -> AsyncGenerator[BaseMessage, None]:
+) -> AsyncGenerator[AssistantMessage | ToolMessage, None]:
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
@@ -77,7 +77,7 @@ async def chat_stream(
         tools=ollama_tools,
         format=ollama_format,
     ):
-        yield to_message(chunk, tools=tools)
+        yield cast(AssistantMessage, to_message(chunk, tools=tools))
 
 
 async def chat_stream_raw(
