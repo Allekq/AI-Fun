@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..models.messages import BaseMessage
+if TYPE_CHECKING:
+    from ..models.messages import BaseMessage
 
 
 @dataclass
@@ -23,7 +24,7 @@ class ContextResult:
     """
 
     should_continue: bool = True
-    injections: list[BaseMessage] = field(default_factory=list)
+    injections: "list[BaseMessage]" = field(default_factory=list)
 
 
 class ToolContext(ABC):

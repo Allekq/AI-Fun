@@ -4,21 +4,64 @@ from typing import Any, cast
 from src.InfoGather.constants import InputHandler
 from src.LLM import (
     BaseMessage,
-    ConversationEvent,
     HumanMessage,
     OllamaModels,
     SystemMessage,
+    ToolLoopMiddleware,
+    ToolUsageContext,
 )
 from src.LLM import (
     chat_tool as llm_chat_tool,
 )
 from src.LLM.tools import AgentTool, describe_tools_for_prompt
 
-from .context_limit import QuestionLimitContext
 from .info_book import InfoBook
 from .info_book_fallback import fill_unfilled_fields
 from .prompts.gather_system import build_system_prompt
 from .tools.factory import build_tools_from_info_book
+
+
+class QuestionLimitMiddleware(ToolLoopMiddleware):
+    def __init__(self, limit: int = 6, warn_at: int = 4):
+        self.limit = limit
+        self.warn_at = warn_at
+        self.ask_count = 0
+        self.warning_sent = False
+
+    async def on_before_llm_call(self, messages: list, context: ToolUsageContext) -> None:
+        pass
+
+    async def on_after_llm_call(self, assistant_msg: Any, context: ToolUsageContext) -> None:
+        pass
+
+    async def on_tool_call(self, tool_call: Any, context: ToolUsageContext) -> None:
+        if tool_call.tool.name == "ask_user":
+            self.ask_count += 1
+
+    async def on_tool_result(self, tool_name: str, result: str, context: ToolUsageContext) -> None:
+        pass
+
+    async def should_continue(self, tool_call_count: int, context: ToolUsageContext) -> bool:
+        if self.ask_count >= self.limit:
+            return False
+        return True
+
+    async def on_injections(self, injections: list, context: ToolUsageContext) -> list:
+        result_injections = []
+        if self.ask_count >= self.limit:
+            result_injections.append(
+                SystemMessage(
+                    content=f"SYSTEM: You have reached the maximum limit of {self.limit} questions. You must now stop gathering information and proceed with what you have."
+                )
+            )
+        elif self.ask_count >= self.warn_at and not self.warning_sent:
+            self.warning_sent = True
+            result_injections.append(
+                SystemMessage(
+                    content=f"SYSTEM WARNING: You have asked {self.ask_count} questions. You are approaching the limit of {self.limit}. Please wrap up your information gathering efficiently in the next {self.limit - self.ask_count} questions."
+                )
+            )
+        return result_injections
 
 
 async def gather_conversation(
@@ -29,11 +72,11 @@ async def gather_conversation(
     custom_system_prompt_base: str | None = None,
     add_tools_to_prompt: bool = True,
     conversation_character: str | None = None,
-    callbacks: list[Callable[[ConversationEvent], Awaitable[None]]] | None = None,
     stream: bool = False,
     extra_tools: list[AgentTool] | None = None,
     question_limit: int = 6,
     warn_at_question: int = 4,
+    middleware: list[ToolLoopMiddleware] | None = None,
     **chat_kwargs: Any,
 ) -> tuple[InfoBook, list[BaseMessage]]:
     """
@@ -47,11 +90,11 @@ async def gather_conversation(
         custom_system_prompt_base: Custom base system prompt. If provided, used exclusively (no default added)
         add_tools_to_prompt: Whether to include tool descriptions in the system prompt
         conversation_character: String defining the style/vibe of questioning
-        callbacks: Optional list of async callbacks for conversation events
         stream: Whether to use streaming mode
         extra_tools: Optional list of additional AgentTools to include
         question_limit: Maximum number of questions to ask before stopping
         warn_at_question: Number of questions at which to warn the AI
+        middleware: Optional list of middleware for tool loop
         **chat_kwargs: Additional kwargs passed to chat_tool (temperature, etc.)
 
     Returns:
@@ -91,17 +134,20 @@ async def gather_conversation(
         extra_tools=extra_tools,
     )
 
-    # Initialize context for limit management
-    context = QuestionLimitContext(limit=question_limit, warn_at=warn_at_question)
+    question_middleware: ToolLoopMiddleware = QuestionLimitMiddleware(
+        limit=question_limit, warn_at=warn_at_question
+    )
+    all_middleware: list[ToolLoopMiddleware] = [question_middleware]
+    if middleware:
+        all_middleware.extend(middleware)
 
     additions = await llm_chat_tool(
         model=model,
         messages=cast(list[BaseMessage], messages),
         tools=tools,
         tool_handlers=tool_handlers,
-        callbacks=callbacks,
         stream=stream,
-        context=context,
+        middleware=all_middleware,
         **chat_kwargs,
     )
 
