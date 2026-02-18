@@ -9,9 +9,7 @@ FILL_IF_HINTED = "fill if the user's response contains hints, context, or relate
 FILL_WITH_DEFAULT = (
     "fill with a sensible default if user doesn't provide it, unless they explicitly object"
 )
-RANDOMIZE_IF_MISSING = "generate a reasonable random value if not provided"
-DONT_FILL = "never auto-fill - user must explicitly provide this information"
-
+FILL_RANDOMIZE_IF_MISSING = "generate a reasonable random value if not provided"
 
 @dataclass
 class InfoGatherField(ABC):

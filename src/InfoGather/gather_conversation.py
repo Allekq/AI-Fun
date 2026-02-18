@@ -81,6 +81,7 @@ async def gather_conversation(
     question_limit: int = 6,
     warn_at_question: int = 4,
     middleware: list[ToolLoopMiddleware] | None = None,
+    system_prompt_addon: str | None = None,
     **chat_kwargs: Any,
 ) -> tuple[InfoBook, list[BaseMessage]]:
     """
@@ -91,7 +92,7 @@ async def gather_conversation(
         model: The Ollama model to use
         input_handler: Async/sync callable that takes (question) and returns user's answer
         first_user_message: Optional initial user message to start with (alternative to auto-generated)
-        custom_system_prompt_base: Custom base system prompt. If provided, used exclusively (no default added)
+        custom_system_prompt_base: Custom base system prompt. If provided, replaces the default base.
         add_tools_to_prompt: Whether to include tool descriptions in the system prompt
         conversation_character: String defining the style/vibe of questioning
         stream: Whether to use streaming mode
@@ -99,6 +100,7 @@ async def gather_conversation(
         question_limit: Maximum number of questions to ask before stopping
         warn_at_question: Number of questions at which to warn the AI
         middleware: Optional list of middleware for tool loop
+        system_prompt_addon: Additional content to append to the system prompt
         **chat_kwargs: Additional kwargs passed to chat_tool (temperature, etc.)
 
     Returns:
@@ -115,6 +117,7 @@ async def gather_conversation(
         conversation_character=conversation_character,
         tools_section=tools_section,
         fields=info_book.info,
+        system_prompt_addon=system_prompt_addon,
     )
 
     messages: list[BaseMessage] = [

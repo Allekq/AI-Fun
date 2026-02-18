@@ -19,7 +19,7 @@ def log_info_book(log_name: str, info_book: InfoBook) -> str:
         The path to the created log file.
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_name = f"{log_name}_info_book_{timestamp}.txt"
+    file_name = f"{timestamp}_{log_name}_info_book.txt"
     file_path = LOGS_DIR / file_name
 
     lines = [

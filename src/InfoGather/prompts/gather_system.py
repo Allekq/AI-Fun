@@ -14,7 +14,7 @@ def _build_fields_section(fields: list["InfoGatherField"]) -> str:
     if not fields:
         return ""
 
-    lines = ["AVAILABLE FIELDS:"]
+    lines = []
 
     required_fields = [f for f in fields if f.required]
     optional_fields = [f for f in fields if not f.required]
@@ -39,40 +39,53 @@ def build_system_prompt(
     conversation_character: str | None = None,
     tools_section: str = "",
     fields: list["InfoGatherField"] | None = None,
+    system_prompt_addon: str | None = None,
 ) -> str:
     """
     Build the system prompt for information gathering conversations.
 
     Args:
         goal: The goal of the information gathering.
-        custom_system_prompt_base: Custom base prompt to use exclusively.
+        custom_system_prompt_base: Custom base prompt to use instead of the default.
         add_tools_to_prompt: Whether to include tool descriptions.
         conversation_character: Custom conversation vibe/character.
         tools_section: Additional tools to include.
         fields: List of fields to include in the available fields section.
+        system_prompt_addon: Additional content to append at the end.
 
     Returns:
         The formatted system prompt.
     """
-    if custom_system_prompt_base:
-        return custom_system_prompt_base
+    base_section = (
+        custom_system_prompt_base if custom_system_prompt_base else DEFAULT_GATHER_SYSTEM_BASE
+    )
 
     vibe_section = conversation_character if conversation_character else DEFAULT_CONVERSATION_VIBE
 
     tools_output = tools_section if add_tools_to_prompt else ""
 
     if goal:
-        goal_section = f"Goal: {goal}"
+        goal_section = goal
     else:
-        goal_section = "Goal: Gather information as needed."
+        goal_section = "Gather information as needed."
 
     fields_section = ""
     if fields:
         fields_section = _build_fields_section(fields)
 
-    return DEFAULT_GATHER_SYSTEM_BASE.format(
-        goal_section=goal_section,
-        vibe_section=vibe_section,
-        tools_section=tools_output,
-        fields_section=fields_section,
-    )
+    sections = []
+
+    sections.append(f"=== BASE SYSTEM PROMPT ===\n{base_section}")
+    sections.append(f"=== GOAL ===\n{goal_section}")
+    sections.append(f"=== CONVERSATION CHARACTER ===\n{vibe_section}")
+
+    if fields_section:
+        sections.append(f"=== AVAILABLE FIELDS ===\n{fields_section}")
+
+    if tools_output:
+        sections.append(f"=== TOOLS ===\n{tools_output}")
+
+    if system_prompt_addon:
+        sections.append(f"=== ADDON ===\n{system_prompt_addon}")
+
+    return "\n\n".join(sections)

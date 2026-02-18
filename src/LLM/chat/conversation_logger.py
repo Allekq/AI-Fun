@@ -25,7 +25,7 @@ def log_conversation(log_name: str, messages: list[BaseMessage]) -> str:
         The path to the created log file.
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_name = f"{log_name}_{timestamp}.txt"
+    file_name = f"{timestamp}_{log_name}.txt"
     file_path = LOGS_DIR / file_name
 
     lines = [
