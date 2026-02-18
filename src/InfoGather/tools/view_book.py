@@ -1,5 +1,6 @@
 from src.InfoGather.tools.base import InfoBookTool
 
+
 class ViewBookTool(InfoBookTool):
     @property
     def name(self) -> str:
@@ -13,12 +14,12 @@ class ViewBookTool(InfoBookTool):
         """
         View the info book state.
         """
+        fields = sorted(self.info_book.info, key=lambda f: f.importance, reverse=True)
         lines = ["=== Info Book State ==="]
-        for field in self.info_book.info:
+        for field in fields:
             filled_indicator = "[FILLED]" if field.is_filled() else "[EMPTY]"
             lines.append(f"{filled_indicator} {field.name}: {field.value or '(not set)'}")
             lines.append(f"  Description: {field.description}")
-            if field.required:
-                lines.append("  Required: Yes")
+            lines.append(f"  Importance: {field.importance}")
             lines.append("")
         return "\n".join(lines)

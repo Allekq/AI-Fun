@@ -2,7 +2,7 @@ from src.InfoGather.tools.base import InfoBookTool
 
 FIELD_SECTION_START = "=== Field: {field_name} ==="
 FIELD_DESCRIPTION = "Description: {description}"
-FIELD_REQUIRED = "Required: {yes_no}"
+FIELD_IMPORTANCE = "Importance: {importance}"
 FIELD_FILL_GUIDANCE = "Fill guidance: {guidance}"
 FIELD_FALLBACK_ENABLED = "Fallback AI enabled: {yes_no}"
 FIELD_FALLBACK_DEFAULT = "Fallback default: {default}"
@@ -18,7 +18,7 @@ class GetFieldInfoTool(InfoBookTool):
 
     @property
     def description(self) -> str:
-        return "Get detailed information about a specific field, including its description, whether it's required, and current value."
+        return "Get detailed information about a specific field, including its description, importance, and current value."
 
     async def execute(self, field_name: str) -> str:
         """
@@ -33,7 +33,7 @@ class GetFieldInfoTool(InfoBookTool):
 
         lines = [FIELD_SECTION_START.format(field_name=field.name)]
         lines.append(FIELD_DESCRIPTION.format(description=field.description))
-        lines.append(FIELD_REQUIRED.format(yes_no="Yes" if field.required else "No"))
+        lines.append(FIELD_IMPORTANCE.format(importance=field.importance))
         lines.append(FIELD_FILL_GUIDANCE.format(guidance=field.fill_guidance))
         lines.append(
             FIELD_FALLBACK_ENABLED.format(yes_no="Yes" if field.fallback_ai_enabled else "No")

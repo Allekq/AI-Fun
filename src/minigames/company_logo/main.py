@@ -5,7 +5,7 @@ from src.ImageGen import generate_image
 from src.ImageGen.models import get_model as get_image_model
 from src.ImageGen.types import ImageRequest
 from src.InfoGather import gather_conversation
-from src.LLM import AssistantMessage, BaseMessage, SystemMessage
+from src.LLM import AssistantMessage
 from src.LLM import get_model as get_llm_model
 from src.LLM.chat.conversation_logger import log_conversation
 from src.utility.info_book_logger import log_info_book
@@ -32,7 +32,9 @@ async def run_logo_minigame(
     print("  COMPANY LOGO GENERATOR")
     print("=" * 50)
     print("\nI'll help you create a custom company logo!")
-    print("First, let me gather some information about your company, and the logo you would like to create.\n")
+    print(
+        "First, let me gather some information about your company, and the logo you would like to create.\n"
+    )
 
     info_book = create_logo_info_book()
 
@@ -42,7 +44,6 @@ async def run_logo_minigame(
         input_handler=input_handler,
     )
 
-
     log_info_book(LOG_NAME, info_book)
     log_conversation(LOG_NAME, conversation)
 
@@ -50,8 +51,8 @@ async def run_logo_minigame(
         last_msg = cast(AssistantMessage, conversation[-1])
         print(f"\n[DEBUG] Last assistant message: {last_msg.content[:100]}...")
 
-    if not info_book.is_complete():
-        print("\nSome required fields are still unfilled. Please try again.")
+    if not info_book.is_filled_above_importance(9):
+        print("\nToo little info to make the logo - we need more details about your company.")
         return None
 
     print("\n" + "=" * 50)

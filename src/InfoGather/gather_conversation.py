@@ -126,7 +126,7 @@ async def gather_conversation(
 
     if initial_conversation:
         messages.extend(initial_conversation)
-    elif not info_book.is_complete():
+    elif not info_book.is_filled_above_importance(1):
         filled_fields = [f for f in info_book.info if f.is_filled()]
         if filled_fields:
             filled_summary = ", ".join([f"{f.name}: {f.value}" for f in filled_fields])

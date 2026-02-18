@@ -7,13 +7,14 @@ from src.utility.save_text import save_text
 LOGS_DIR = Path("Logs")
 
 
-def log_info_book(log_name: str, info_book: InfoBook) -> str:
+def log_info_book(log_name: str, info_book: InfoBook, threshold: int = 1) -> str:
     """
     Log the current state of an info book to a text file.
 
     Args:
         log_name: The base name for the log file.
         info_book: The InfoBook to log.
+        threshold: Only include fields with importance >= threshold (default: 1).
 
     Returns:
         The path to the created log file.
@@ -22,36 +23,24 @@ def log_info_book(log_name: str, info_book: InfoBook) -> str:
     file_name = f"{timestamp}_{log_name}_info_book.txt"
     file_path = LOGS_DIR / file_name
 
+    sorted_fields = sorted(info_book.info, key=lambda f: f.importance, reverse=True)
+    relevant_fields = [f for f in sorted_fields if f.importance >= threshold]
+
     lines = [
         f"=== INFO BOOK LOG: {info_book.goal} ===",
         f"Timestamp: {datetime.now().isoformat()}",
-        f"Is Complete: {info_book.is_complete()}",
+        f"Has all important info (importance >= {threshold}): {info_book.is_filled_above_importance(threshold)}",
         "",
-        "=== FIELDS ===",
+        "=== FIELDS (sorted by importance) ===",
         "",
     ]
 
-    required_fields = [f for f in info_book.info if f.required]
-    optional_fields = [f for f in info_book.info if not f.required]
-
-    if required_fields:
-        lines.append("--- REQUIRED FIELDS ---")
-        for field in required_fields:
-            status = "FILLED" if field.is_filled() else "EMPTY"
-            lines.append(f"[{status}] {field.name}")
-            lines.append(f"  Description: {field.description}")
-            lines.append(f"  Value: {field.value or '(not set)'}")
-            lines.append("")
+    for field in relevant_fields:
+        status = "FILLED" if field.is_filled() else "EMPTY"
+        lines.append(f"[{status}] {field.name} (importance: {field.importance})")
+        lines.append(f"  Description: {field.description}")
+        lines.append(f"  Value: {field.value or '(not set)'}")
         lines.append("")
-
-    if optional_fields:
-        lines.append("--- OPTIONAL FIELDS ---")
-        for field in optional_fields:
-            status = "FILLED" if field.is_filled() else "EMPTY"
-            lines.append(f"[{status}] {field.name}")
-            lines.append(f"  Description: {field.description}")
-            lines.append(f"  Value: {field.value or '(not set)'}")
-            lines.append("")
 
     content = "\n".join(lines)
     save_text(str(file_path), content)

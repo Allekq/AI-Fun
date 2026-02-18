@@ -36,9 +36,9 @@ class InfoBook:
         unfilled = self.get_unfilled_fields()
         return [f for f in unfilled if f.fallback_ai_enabled]
 
-    def is_complete(self) -> bool:
-        important_unfilled = [f for f in self.info if f.importance > 0 and not f.is_filled()]
-        return len(important_unfilled) == 0
+    def is_filled_above_importance(self, threshold: int) -> bool:
+        unfilled = [f for f in self.info if f.importance >= threshold and not f.is_filled()]
+        return len(unfilled) == 0
 
     def add_field(self, field: InfoGatherField) -> None:
         if not self.get_field(field.name):
@@ -58,5 +58,4 @@ class InfoBook:
         return {
             "goal": self.goal,
             "fields": self.get_field_schemas(),
-            "is_complete": self.is_complete(),
         }

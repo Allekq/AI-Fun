@@ -8,30 +8,20 @@ class LintBookStateTool(InfoBookTool):
 
     @property
     def description(self) -> str:
-        return "Get a concise list of fields that still need values, organized by required vs optional. Use this before ending the conversation to ensure all required fields are filled."
+        return "Get a list of fields that still need values, sorted by importance (highest first). Use this as a suggestion before ending the conversation."
 
     async def execute(self) -> str:
         """
-        Lint the info book state - show which fields are still empty.
+        Lint the info book state - show which fields are still empty, sorted by importance.
         """
-        required_unfilled = [f for f in self.info_book.info if f.required and not f.is_filled()]
-        optional_unfilled = [f for f in self.info_book.info if not f.required and not f.is_filled()]
+        unfilled = [f for f in self.info_book.info if not f.is_filled()]
+        unfilled.sort(key=lambda f: f.importance, reverse=True)
 
-        lines = []
+        if not unfilled:
+            return "All fields have been filled!"
 
-        if required_unfilled:
-            lines.append("=== REQUIRED FIELDS (still need values) ===")
-            for field in required_unfilled:
-                lines.append(f"- {field.name}: {field.description}")
-            lines.append("")
-
-        if optional_unfilled:
-            lines.append("=== OPTIONAL FIELDS (still empty) ===")
-            for field in optional_unfilled:
-                lines.append(f"- {field.name}: {field.description}")
-            lines.append("")
-
-        if not required_unfilled and not optional_unfilled:
-            lines.append("All fields have been filled!")
+        lines = ["=== UNFILLED FIELDS (sorted by importance) ==="]
+        for field in unfilled:
+            lines.append(f"- {field.name} (importance: {field.importance}): {field.description}")
 
         return "\n".join(lines)

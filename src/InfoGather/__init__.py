@@ -5,8 +5,8 @@ from .info_book_fallback import fill_unfilled_fields
 from .info_gather_field import (
     FILL_IF_EXPLICIT,
     FILL_IF_HINTED,
-    FILL_WITH_DEFAULT,
     FILL_RANDOMIZE_IF_MISSING,
+    FILL_WITH_DEFAULT,
     BoolField,
     EnumField,
     FloatField,
