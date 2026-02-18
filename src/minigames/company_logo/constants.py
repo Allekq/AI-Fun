@@ -11,6 +11,9 @@ FIELD_PRIMARY_PRODUCT = "primary_product"
 FIELD_COMPANY_VALUES = "company_values"
 FIELD_OWNER_NAME = "owner_name"
 FIELD_COMPANY_GOALS = "company_goals"
+FIELD_DESIRED_ELEMENTS = "desired_elements"
+FIELD_LOGO_TWIST = "logo_twist"
+FIELD_DO_NOT_USE = "do_not_use"
 
 LOGO_GOAL = "Gather the information necessary to generate a company logo that fits the user's desires and the company's nature."
 
@@ -28,6 +31,9 @@ ALL_FIELDS = [
     FIELD_COMPANY_VALUES,
     FIELD_OWNER_NAME,
     FIELD_COMPANY_GOALS,
+    FIELD_DESIRED_ELEMENTS,
+    FIELD_LOGO_TWIST,
+    FIELD_DO_NOT_USE,
 ]
 
 REQUIRED_FIELDS = [

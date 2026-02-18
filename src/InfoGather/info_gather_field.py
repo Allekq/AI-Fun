@@ -10,6 +10,14 @@ FILL_WITH_DEFAULT = (
     "fill with a sensible default if user doesn't provide it, unless they explicitly object"
 )
 FILL_RANDOMIZE_IF_MISSING = "generate a reasonable random value if not provided"
+DONT_FILL = ""
+
+IMPORTANCE_CRITICAL = "critical"
+IMPORTANCE_HIGH = "high"
+IMPORTANCE_MEDIUM = "medium"
+IMPORTANCE_LOW = "low"
+IMPORTANCE_NONE = "none"
+
 
 @dataclass
 class InfoGatherField(ABC):
@@ -20,6 +28,7 @@ class InfoGatherField(ABC):
     fill_guidance: str = DONT_FILL
     fallback_ai_enabled: bool = False
     fallback_default: str | None = None
+    importance: str = IMPORTANCE_MEDIUM
 
     @property
     @abstractmethod
@@ -51,6 +60,7 @@ class InfoGatherField(ABC):
             "value": self.value,
             "required": self.required,
             "fill_guidance": self.fill_guidance,
+            "importance": self.importance,
             "fallback_ai_enabled": self.fallback_ai_enabled,
             "fallback_default": self.fallback_default,
             "filled": self.is_filled(),

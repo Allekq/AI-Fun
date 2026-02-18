@@ -2,6 +2,10 @@ from src.InfoGather.info_book import InfoBook
 from src.InfoGather.info_gather_field import (
     FILL_IF_EXPLICIT,
     FILL_IF_HINTED,
+    IMPORTANCE_HIGH,
+    IMPORTANCE_LOW,
+    IMPORTANCE_MEDIUM,
+    IMPORTANCE_NONE,
     StringField,
 )
 
@@ -12,7 +16,10 @@ from .constants import (
     FIELD_COMPANY_GOALS,
     FIELD_COMPANY_NAME,
     FIELD_COMPANY_VALUES,
+    FIELD_DESIRED_ELEMENTS,
+    FIELD_DO_NOT_USE,
     FIELD_INDUSTRY,
+    FIELD_LOGO_TWIST,
     FIELD_MOTTO,
     FIELD_ORIGIN,
     FIELD_OWNER_NAME,
@@ -33,6 +40,7 @@ def create_logo_info_book() -> InfoBook:
             description="What is the name of the company?",
             required=True,
             fill_guidance=FILL_IF_EXPLICIT,
+            importance=IMPORTANCE_HIGH,
         )
     )
 
@@ -42,6 +50,7 @@ def create_logo_info_book() -> InfoBook:
             description="What industry is the company in? (tech, food, fashion, finance, healthcare, education, entertainment, etc.)",
             required=True,
             fill_guidance=FILL_IF_EXPLICIT,
+            importance=IMPORTANCE_HIGH,
         )
     )
 
@@ -51,6 +60,7 @@ def create_logo_info_book() -> InfoBook:
             description="What is the brand personality? (playful, professional, luxury, eco-friendly, innovative, friendly, bold, sophisticated, etc.)",
             required=True,
             fill_guidance=FILL_IF_EXPLICIT,
+            importance=IMPORTANCE_HIGH,
         )
     )
 
@@ -60,6 +70,7 @@ def create_logo_info_book() -> InfoBook:
             description="What design style should the logo have? (modern, vintage, minimalist, bold, elegant, artistic, corporate, playful, etc.)",
             required=True,
             fill_guidance=FILL_IF_EXPLICIT,
+            importance=IMPORTANCE_HIGH,
         )
     )
 
@@ -69,6 +80,7 @@ def create_logo_info_book() -> InfoBook:
             description="Are there any color preferences? (e.g., blue and white, warm colors, dark theme, etc.)",
             required=False,
             fill_guidance=FILL_IF_EXPLICIT,
+            importance=IMPORTANCE_MEDIUM,
         )
     )
 
@@ -78,6 +90,7 @@ def create_logo_info_book() -> InfoBook:
             description="Where is the company from? (city/country)",
             required=False,
             fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_LOW,
         )
     )
 
@@ -87,6 +100,7 @@ def create_logo_info_book() -> InfoBook:
             description="What is the company's backstory or founding story?",
             required=False,
             fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_NONE,
         )
     )
 
@@ -96,6 +110,7 @@ def create_logo_info_book() -> InfoBook:
             description="Does the company have a motto or tagline?",
             required=False,
             fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_NONE,
         )
     )
 
@@ -105,6 +120,7 @@ def create_logo_info_book() -> InfoBook:
             description="Who is the target audience? (businesses, young adults, families, children, seniors, etc.)",
             required=False,
             fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_MEDIUM,
         )
     )
 
@@ -114,6 +130,7 @@ def create_logo_info_book() -> InfoBook:
             description="What is the primary product or service?",
             required=False,
             fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_MEDIUM,
         )
     )
 
@@ -123,6 +140,7 @@ def create_logo_info_book() -> InfoBook:
             description="What are the core company values? (innovation, sustainability, quality, community, etc.)",
             required=False,
             fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_LOW,
         )
     )
 
@@ -132,6 +150,7 @@ def create_logo_info_book() -> InfoBook:
             description="What is the founder or owner's name?",
             required=False,
             fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_NONE,
         )
     )
 
@@ -141,6 +160,37 @@ def create_logo_info_book() -> InfoBook:
             description="What are the company's main goals?",
             required=False,
             fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_LOW,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_DESIRED_ELEMENTS,
+            description="What elements should be included in the logo? (icon/symbol, text/company name, slogan, specific shapes, mascot, etc.)",
+            required=False,
+            fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_HIGH,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_LOGO_TWIST,
+            description="Is there any unique twist or creative angle for the logo? (e.g., hidden meaning, clever visual pun, specific artistic approach)",
+            required=False,
+            fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_MEDIUM,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_DO_NOT_USE,
+            description="Are there any elements, colors, or styles to avoid? (e.g., no red, no animals, avoid certain symbols)",
+            required=False,
+            fill_guidance=FILL_IF_HINTED,
+            importance=IMPORTANCE_NONE,
         )
     )
 

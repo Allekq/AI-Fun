@@ -9,25 +9,32 @@ if TYPE_CHECKING:
 
 def _build_fields_section(fields: list["InfoGatherField"]) -> str:
     """
-    Build a section listing all available fields with their descriptions and required status.
+    Build a section listing all available fields with their descriptions, importance, and fill guidance.
     """
     if not fields:
         return ""
 
     lines = []
 
-    required_fields = [f for f in fields if f.required]
-    optional_fields = [f for f in fields if not f.required]
+    importance_order = ["critical", "high", "medium", "low", "none"]
+    importance_labels = {
+        "critical": "Critical",
+        "high": "High Priority",
+        "medium": "Medium Priority",
+        "low": "Low Priority",
+        "none": "Nice to Have (fill only if mentioned)",
+    }
 
-    if required_fields:
-        lines.append("  Required:")
-        for field in required_fields:
-            lines.append(f"    - {field.name}: {field.description}")
+    for importance in importance_order:
+        fields_with_importance = [f for f in fields if f.importance == importance]
+        if not fields_with_importance:
+            continue
 
-    if optional_fields:
-        lines.append("  Optional:")
-        for field in optional_fields:
-            lines.append(f"    - {field.name}: {field.description}")
+        lines.append(f"  {importance_labels[importance]}:")
+        for field in fields_with_importance:
+            fill_note = f" [{field.fill_guidance}]" if field.fill_guidance else ""
+            req_marker = " (required)" if field.required else ""
+            lines.append(f"    - {field.name}: {field.description}{req_marker}{fill_note}")
 
     return "\n".join(lines)
 
