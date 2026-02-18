@@ -32,17 +32,13 @@ class InfoBook:
     def get_unfilled_fields(self) -> list[InfoGatherField]:
         return [f for f in self.info if not f.is_filled()]
 
-    def get_required_unfilled_fields(self) -> list[InfoGatherField]:
-        unfilled = self.get_unfilled_fields()
-        return [f for f in unfilled if f.required]
-
     def get_fallback_enabled_fields(self) -> list[InfoGatherField]:
         unfilled = self.get_unfilled_fields()
         return [f for f in unfilled if f.fallback_ai_enabled]
 
     def is_complete(self) -> bool:
-        required_unfilled = self.get_required_unfilled_fields()
-        return len(required_unfilled) == 0
+        important_unfilled = [f for f in self.info if f.importance > 0 and not f.is_filled()]
+        return len(important_unfilled) == 0
 
     def add_field(self, field: InfoGatherField) -> None:
         if not self.get_field(field.name):

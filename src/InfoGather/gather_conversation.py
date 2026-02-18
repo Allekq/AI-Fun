@@ -78,8 +78,8 @@ async def gather_conversation(
     conversation_character: str | None = None,
     stream: bool = False,
     extra_tools: list[AgentTool] | None = None,
-    question_limit: int = 6,
-    warn_at_question: int = 4,
+    question_limit: int = 8,
+    warn_at_question: int = 6,
     middleware: list[ToolLoopMiddleware] | None = None,
     system_prompt_addon: str | None = None,
     **chat_kwargs: Any,
@@ -127,14 +127,13 @@ async def gather_conversation(
     if initial_conversation:
         messages.extend(initial_conversation)
     elif not info_book.is_complete():
-        unfilled = info_book.get_unfilled_fields()
-        if unfilled:
-            first_field = unfilled[0]
-            messages.append(
-                HumanMessage(
-                    content=f"Please help me gather the following information: {first_field.description}"
-                )
-            )
+        filled_fields = [f for f in info_book.info if f.is_filled()]
+        if filled_fields:
+            filled_summary = ", ".join([f"{f.name}: {f.value}" for f in filled_fields])
+            initial_prompt = f"I'm helping you fill out an info book. Here's what's already filled: {filled_summary}. Tell me about your company and what you want in your logo."
+        else:
+            initial_prompt = "I'm helping you fill out an info book for your logo. Tell me about your company and what you want in your logo."
+        messages.append(HumanMessage(content=initial_prompt))
 
     tools: list[AgentTool] = [
         AskUserTool(info_book=info_book, input_handler=input_handler),

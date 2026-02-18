@@ -9,32 +9,33 @@ if TYPE_CHECKING:
 
 def _build_fields_section(fields: list["InfoGatherField"]) -> str:
     """
-    Build a section listing all available fields with their descriptions, importance, and fill guidance.
+    Build a section listing all available fields with their descriptions, importance (0-10), and fill guidance.
+    Sorted by importance descending.
     """
     if not fields:
         return ""
 
-    lines = []
+    sorted_fields = sorted(fields, key=lambda f: f.importance, reverse=True)
 
-    importance_order = ["critical", "high", "medium", "low", "none"]
-    importance_labels = {
-        "critical": "Critical",
-        "high": "High Priority",
-        "medium": "Medium Priority",
-        "low": "Low Priority",
-        "none": "Nice to Have (fill only if mentioned)",
+    groups = {
+        (8, 10): "Critical (8-10) - MUST fill these",
+        (5, 7): "Medium (5-7) - Should fill these",
+        (1, 4): "Low (1-4) - II not in a rush, fill these",
+        (0, 0): "Nice to Have (0) - Fill only if mentioned",
     }
 
-    for importance in importance_order:
-        fields_with_importance = [f for f in fields if f.importance == importance]
-        if not fields_with_importance:
+    lines = []
+    for (low, high), label in groups.items():
+        group_fields = [f for f in sorted_fields if low <= f.importance <= high]
+        if not group_fields:
             continue
 
-        lines.append(f"  {importance_labels[importance]}:")
-        for field in fields_with_importance:
+        lines.append(f"  {label}:")
+        for field in group_fields:
             fill_note = f" [{field.fill_guidance}]" if field.fill_guidance else ""
-            req_marker = " (required)" if field.required else ""
-            lines.append(f"    - {field.name}: {field.description}{req_marker}{fill_note}")
+            lines.append(
+                f"    - {field.name} (importance: {field.importance}): {field.description}{fill_note}"
+            )
 
     return "\n".join(lines)
 

@@ -2,10 +2,6 @@ from src.InfoGather.info_book import InfoBook
 from src.InfoGather.info_gather_field import (
     FILL_IF_EXPLICIT,
     FILL_IF_HINTED,
-    IMPORTANCE_HIGH,
-    IMPORTANCE_LOW,
-    IMPORTANCE_MEDIUM,
-    IMPORTANCE_NONE,
     StringField,
 )
 
@@ -38,9 +34,8 @@ def create_logo_info_book() -> InfoBook:
         StringField(
             name=FIELD_COMPANY_NAME,
             description="What is the name of the company?",
-            required=True,
             fill_guidance=FILL_IF_EXPLICIT,
-            importance=IMPORTANCE_HIGH,
+            importance=10,
         )
     )
 
@@ -48,9 +43,8 @@ def create_logo_info_book() -> InfoBook:
         StringField(
             name=FIELD_INDUSTRY,
             description="What industry is the company in? (tech, food, fashion, finance, healthcare, education, entertainment, etc.)",
-            required=True,
             fill_guidance=FILL_IF_EXPLICIT,
-            importance=IMPORTANCE_HIGH,
+            importance=10,
         )
     )
 
@@ -58,9 +52,8 @@ def create_logo_info_book() -> InfoBook:
         StringField(
             name=FIELD_BRAND_PERSONALITY,
             description="What is the brand personality? (playful, professional, luxury, eco-friendly, innovative, friendly, bold, sophisticated, etc.)",
-            required=True,
             fill_guidance=FILL_IF_EXPLICIT,
-            importance=IMPORTANCE_HIGH,
+            importance=10,
         )
     )
 
@@ -68,99 +61,8 @@ def create_logo_info_book() -> InfoBook:
         StringField(
             name=FIELD_STYLE,
             description="What design style should the logo have? (modern, vintage, minimalist, bold, elegant, artistic, corporate, playful, etc.)",
-            required=True,
             fill_guidance=FILL_IF_EXPLICIT,
-            importance=IMPORTANCE_HIGH,
-        )
-    )
-
-    info_book.add_field(
-        StringField(
-            name=FIELD_COLOR_PREFERENCES,
-            description="Are there any color preferences? (e.g., blue and white, warm colors, dark theme, etc.)",
-            required=False,
-            fill_guidance=FILL_IF_EXPLICIT,
-            importance=IMPORTANCE_MEDIUM,
-        )
-    )
-
-    info_book.add_field(
-        StringField(
-            name=FIELD_ORIGIN,
-            description="Where is the company from? (city/country)",
-            required=False,
-            fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_LOW,
-        )
-    )
-
-    info_book.add_field(
-        StringField(
-            name=FIELD_BACKSTORY,
-            description="What is the company's backstory or founding story?",
-            required=False,
-            fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_NONE,
-        )
-    )
-
-    info_book.add_field(
-        StringField(
-            name=FIELD_MOTTO,
-            description="Does the company have a motto or tagline?",
-            required=False,
-            fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_NONE,
-        )
-    )
-
-    info_book.add_field(
-        StringField(
-            name=FIELD_TARGET_AUDIENCE,
-            description="Who is the target audience? (businesses, young adults, families, children, seniors, etc.)",
-            required=False,
-            fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_MEDIUM,
-        )
-    )
-
-    info_book.add_field(
-        StringField(
-            name=FIELD_PRIMARY_PRODUCT,
-            description="What is the primary product or service?",
-            required=False,
-            fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_MEDIUM,
-        )
-    )
-
-    info_book.add_field(
-        StringField(
-            name=FIELD_COMPANY_VALUES,
-            description="What are the core company values? (innovation, sustainability, quality, community, etc.)",
-            required=False,
-            fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_LOW,
-        )
-    )
-
-    info_book.add_field(
-        StringField(
-            name=FIELD_OWNER_NAME,
-            description="What is the founder or owner's name?",
-            required=False,
-            fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_NONE,
-        )
-    )
-
-    info_book.add_field(
-        StringField(
-            name=FIELD_COMPANY_GOALS,
-            description="What are the company's main goals?",
-            required=False,
-            fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_LOW,
+            importance=10,
         )
     )
 
@@ -168,9 +70,35 @@ def create_logo_info_book() -> InfoBook:
         StringField(
             name=FIELD_DESIRED_ELEMENTS,
             description="What elements should be included in the logo? (icon/symbol, text/company name, slogan, specific shapes, mascot, etc.)",
-            required=False,
             fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_HIGH,
+            importance=10,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_COLOR_PREFERENCES,
+            description="Are there any color preferences? (e.g., blue and white, warm colors, dark theme, etc.)",
+            fill_guidance=FILL_IF_EXPLICIT,
+            importance=7,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_TARGET_AUDIENCE,
+            description="Who is the target audience? (businesses, young adults, families, children, seniors, etc.)",
+            fill_guidance=FILL_IF_HINTED,
+            importance=7,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_PRIMARY_PRODUCT,
+            description="What is the primary product or service?",
+            fill_guidance=FILL_IF_HINTED,
+            importance=7,
         )
     )
 
@@ -178,9 +106,62 @@ def create_logo_info_book() -> InfoBook:
         StringField(
             name=FIELD_LOGO_TWIST,
             description="Is there any unique twist or creative angle for the logo? (e.g., hidden meaning, clever visual pun, specific artistic approach)",
-            required=False,
             fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_MEDIUM,
+            importance=7,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_ORIGIN,
+            description="Where is the company from? (city/country)",
+            fill_guidance=FILL_IF_HINTED,
+            importance=3,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_COMPANY_VALUES,
+            description="What are the core company values? (innovation, sustainability, quality, community, etc.)",
+            fill_guidance=FILL_IF_HINTED,
+            importance=3,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_COMPANY_GOALS,
+            description="What are the company's main goals?",
+            fill_guidance=FILL_IF_HINTED,
+            importance=3,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_BACKSTORY,
+            description="What is the company's backstory or founding story?",
+            fill_guidance=FILL_IF_HINTED,
+            importance=0,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_MOTTO,
+            description="Does the company have a motto or tagline?",
+            fill_guidance=FILL_IF_HINTED,
+            importance=0,
+        )
+    )
+
+    info_book.add_field(
+        StringField(
+            name=FIELD_OWNER_NAME,
+            description="What is the founder or owner's name?",
+            fill_guidance=FILL_IF_HINTED,
+            importance=0,
         )
     )
 
@@ -188,9 +169,8 @@ def create_logo_info_book() -> InfoBook:
         StringField(
             name=FIELD_DO_NOT_USE,
             description="Are there any elements, colors, or styles to avoid? (e.g., no red, no animals, avoid certain symbols)",
-            required=False,
             fill_guidance=FILL_IF_HINTED,
-            importance=IMPORTANCE_NONE,
+            importance=0,
         )
     )
 
