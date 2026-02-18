@@ -20,6 +20,7 @@ from .info_book_fallback import fill_unfilled_fields
 from .prompts.gather_system import build_system_prompt
 from .tools.ask_user import AskUserTool
 from .tools.get_field_info import GetFieldInfoTool
+from .tools.lint_book_state import LintBookStateTool
 from .tools.view_book import ViewBookTool
 from .tools.write_field import WriteFieldTool
 
@@ -71,7 +72,7 @@ async def gather_conversation(
     info_book: InfoBook,
     model: OllamaModels,
     input_handler: InputHandler,
-    initial_prompt: str | None = None,
+    first_user_message: str | None = None,
     custom_system_prompt_base: str | None = None,
     add_tools_to_prompt: bool = True,
     conversation_character: str | None = None,
@@ -89,7 +90,7 @@ async def gather_conversation(
         info_book: The InfoBook to fill with gathered information
         model: The Ollama model to use
         input_handler: Async/sync callable that takes (question) and returns user's answer
-        initial_prompt: Optional initial message to start the conversation
+        first_user_message: Optional initial user message to start with (alternative to auto-generated)
         custom_system_prompt_base: Custom base system prompt. If provided, used exclusively (no default added)
         add_tools_to_prompt: Whether to include tool descriptions in the system prompt
         conversation_character: String defining the style/vibe of questioning
@@ -113,14 +114,15 @@ async def gather_conversation(
         add_tools_to_prompt=add_tools_to_prompt,
         conversation_character=conversation_character,
         tools_section=tools_section,
+        fields=info_book.info,
     )
 
     messages: list[BaseMessage] = [
         SystemMessage(content=system_prompt),
     ]
 
-    if initial_prompt:
-        messages.append(HumanMessage(content=initial_prompt))
+    if first_user_message:
+        messages.append(HumanMessage(content=first_user_message))
     elif not info_book.is_complete():
         unfilled = info_book.get_unfilled_fields()
         if unfilled:
@@ -136,6 +138,7 @@ async def gather_conversation(
         WriteFieldTool(info_book=info_book),
         ViewBookTool(info_book=info_book),
         GetFieldInfoTool(info_book=info_book),
+        LintBookStateTool(info_book=info_book),
     ]
     if extra_tools:
         tools.extend(extra_tools)

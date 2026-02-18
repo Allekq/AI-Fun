@@ -185,3 +185,6 @@ ImageGenResults/
 
 # Private folder (not tracked)
 private/
+
+# Logs
+Logs/

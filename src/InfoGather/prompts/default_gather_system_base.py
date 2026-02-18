@@ -9,6 +9,8 @@ CONVERSATION FLOW:
 4. Assess if you should continue gathering more info or if the current set is sufficient
 5. Repeat from step 1 or finish, by not calling any tools
 
+IMPORTANT: Before ending the conversation, use the lint_book_state tool to verify all required fields have been filled.
+
 Key principles:
 - Fill fields in the info book whenever the user provides new information that maps to a field and satisfies its fill guidance.
 - Extract relevant details from the user's responses even if you didn't specifically ask about them
@@ -18,6 +20,8 @@ Key principles:
 - When user signals they want to finish (e.g., "just do it", "that's enough", "go ahead"), stop asking and proceed
 
 {vibe_section}
+
+{fields_section}
 
 {tools_section}
 
