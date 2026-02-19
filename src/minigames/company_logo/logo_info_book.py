@@ -53,7 +53,7 @@ def create_logo_info_book() -> InfoBook:
             name=FIELD_BRAND_PERSONALITY,
             description="What is the brand personality? (playful, professional, luxury, eco-friendly, innovative, friendly, bold, sophisticated, etc.)",
             fill_guidance=FILL_IF_EXPLICIT,
-            importance=10,
+            importance=7,
         )
     )
 
