@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 from src.InfoGather.info_book import InfoBook
 from src.LLM import (
+    LLMConfig,
     OllamaModels,
     SystemMessage,
     chat_non_stream_no_tool,
@@ -51,7 +52,7 @@ async def build_enhanced_prompt_with_llm(
         messages=[
             SystemMessage(content=system_prompt),
         ],
-        format=LogoPromptResponse,
+        llm_config=LLMConfig(format=LogoPromptResponse),
     )
 
     if hasattr(response, "parsed") and response.parsed:

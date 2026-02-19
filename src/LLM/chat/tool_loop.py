@@ -1,15 +1,6 @@
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel
-
-from ..constants import (
-    DEFAULT_FREQUENCY_PENALTY,
-    DEFAULT_NUM_PREDICT,
-    DEFAULT_PRESENCE_PENALTY,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
-)
+from ..config import LLMConfig
 from ..models.messages import AssistantMessage, BaseMessage, ToolMessage
 from ..models.models import OllamaModels
 
@@ -30,15 +21,7 @@ async def chat_tool(
     agent_tools: "list[AgentTool] | None" = None,
     stream: bool = False,
     max_tool_calls: int = 20,
-    temperature: float = DEFAULT_TEMPERATURE,
-    top_p: float = DEFAULT_TOP_P,
-    top_k: int = DEFAULT_TOP_K,
-    num_predict: int = DEFAULT_NUM_PREDICT,
-    frequency_penalty: float = DEFAULT_FREQUENCY_PENALTY,
-    presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
-    seed: int | None = None,
-    think: bool | None = None,
-    format: type[BaseModel] | None = None,
+    llm_config: LLMConfig | None = None,
     tool_usage_context: "ToolUsageContext | None" = None,
     middleware: "list[ToolLoopMiddleware] | None" = None,
 ) -> list[BaseMessage]:
@@ -85,16 +68,8 @@ async def chat_tool(
             async for msg in chat_stream(
                 model=model,
                 messages=current_messages,
-                temperature=temperature,
-                top_p=top_p,
-                top_k=top_k,
-                num_predict=num_predict,
-                frequency_penalty=frequency_penalty,
-                presence_penalty=presence_penalty,
-                seed=seed,
+                llm_config=llm_config,
                 agent_tools=agent_tools,
-                think=think,
-                format=format,
                 tool_usage_context=ctx,
                 middleware=middleware,
             ):
@@ -109,16 +84,8 @@ async def chat_tool(
             assistant_msg, tool_messages = await chat_non_stream(
                 model=model,
                 messages=current_messages,
-                temperature=temperature,
-                top_p=top_p,
-                top_k=top_k,
-                num_predict=num_predict,
-                frequency_penalty=frequency_penalty,
-                presence_penalty=presence_penalty,
-                seed=seed,
+                llm_config=llm_config,
                 agent_tools=agent_tools,
-                think=think,
-                format=format,
                 tool_usage_context=ctx,
                 middleware=middleware,
             )

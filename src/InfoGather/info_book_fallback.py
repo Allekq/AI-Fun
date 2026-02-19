@@ -6,6 +6,7 @@ from src.LLM import (
     AssistantMessage,
     BaseMessage,
     HumanMessage,
+    LLMConfig,
     OllamaModels,
     ToolMessage,
     chat_non_stream_no_tool,
@@ -75,7 +76,7 @@ async def fill_unfilled_fields(
     messages: list[BaseMessage],
     info_book: Any,
     model: OllamaModels,
-    **chat_kwargs: Any,
+    llm_config: LLMConfig | None = None,
 ) -> Any:
     fallback_fields = info_book.get_fallback_enabled_fields()
     if not fallback_fields:
@@ -89,11 +90,13 @@ async def fill_unfilled_fields(
         conversation=conversation,
     )
 
+    config = llm_config or LLMConfig()
+    config.format = FallbackResponse
+
     response = await chat_non_stream_no_tool(
         model=model,
         messages=[HumanMessage(content=prompt)],
-        format=FallbackResponse,
-        **chat_kwargs,
+        llm_config=config,
     )
 
     if hasattr(response, "parsed") and response.parsed:

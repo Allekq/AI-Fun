@@ -5,6 +5,7 @@ from src.LLM import (
     AgentTool,
     BaseMessage,
     HumanMessage,
+    LLMConfig,
     OllamaModels,
     SystemMessage,
     ToolLoopMiddleware,
@@ -152,13 +153,15 @@ async def gather_conversation(
     if middleware:
         all_middleware.extend(middleware)
 
+    llm_config = LLMConfig(**chat_kwargs) if chat_kwargs else None
+
     additions = await llm_chat_tool(
         model=model,
         messages=cast(list[BaseMessage], messages),
         agent_tools=tools,
         stream=stream,
         middleware=all_middleware,
-        **chat_kwargs,
+        llm_config=llm_config,
     )
 
     all_messages = list(messages)
@@ -169,7 +172,7 @@ async def gather_conversation(
             messages=all_messages,
             info_book=info_book,
             model=model,
-            **chat_kwargs,
+            llm_config=llm_config,
         )
 
     return info_book, additions

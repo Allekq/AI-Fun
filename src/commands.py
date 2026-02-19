@@ -7,6 +7,7 @@ from src.LLM import (
     AssistantMessage,
     BaseMessage,
     HumanMessage,
+    LLMConfig,
     SystemMessage,
     chat_non_stream_no_tool,
     chat_stream,
@@ -19,14 +20,14 @@ async def handle_chat(
     model_name: str,
     messages: list[BaseMessage],
     stream: bool = False,
-    think: bool | None = None,
+    llm_config: LLMConfig | None = None,
 ) -> str:
     model = get_model(model_name)
     accumulated_content = ""
 
     if stream:
         in_thinking = False
-        async for response in chat_stream(model=model, messages=messages, think=think):
+        async for response in chat_stream(model=model, messages=messages, llm_config=llm_config):
             if isinstance(response, AssistantMessage) and response.thinking:
                 if not in_thinking:
                     in_thinking = True
@@ -41,7 +42,9 @@ async def handle_chat(
             if isinstance(response, AssistantMessage) and response.done:
                 print("\n")
     else:
-        response = await chat_non_stream_no_tool(model=model, messages=messages, think=think)
+        response = await chat_non_stream_no_tool(
+            model=model, messages=messages, llm_config=llm_config
+        )
         print(response.content)
         accumulated_content = response.content
 
@@ -52,17 +55,17 @@ async def ask(
     question: str,
     model_name: str = DEFAULT_MODEL.value,
     stream: bool = False,
-    think: bool | None = None,
+    llm_config: LLMConfig | None = None,
 ) -> None:
     messages: list[BaseMessage] = [HumanMessage(content=question)]
-    await handle_chat(model_name, messages, stream, think)
+    await handle_chat(model_name, messages, stream, llm_config)
 
 
 async def chat_cli(
     model_name: str = DEFAULT_MODEL.value,
     system_prompt: str | None = None,
     stream: bool = False,
-    think: bool | None = None,
+    llm_config: LLMConfig | None = None,
 ) -> None:
     conversation: list[BaseMessage] = []
 
@@ -84,7 +87,7 @@ async def chat_cli(
         conversation.append(HumanMessage(content=user_input))
 
         try:
-            response_content = await handle_chat(model_name, conversation, stream, think)
+            response_content = await handle_chat(model_name, conversation, stream, llm_config)
             conversation.append(AssistantMessage(content=response_content))
         except Exception as e:
             print(f"Error: {e}\n")

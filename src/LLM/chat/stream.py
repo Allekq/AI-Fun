@@ -3,16 +3,8 @@ from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING, Any, cast
 
 import ollama
-from pydantic import BaseModel
 
-from ..constants import (
-    DEFAULT_FREQUENCY_PENALTY,
-    DEFAULT_NUM_PREDICT,
-    DEFAULT_PRESENCE_PENALTY,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
-)
+from ..config import LLMConfig
 from ..models.messages import AssistantMessage, BaseMessage, ToolMessage
 from ..models.models import OllamaModels
 from ..tools.base import Tool
@@ -52,15 +44,7 @@ async def _chat_stream_raw(
 async def chat_stream_no_tool(
     model: OllamaModels,
     messages: list[BaseMessage],
-    temperature: float = DEFAULT_TEMPERATURE,
-    top_p: float = DEFAULT_TOP_P,
-    top_k: int = DEFAULT_TOP_K,
-    num_predict: int = DEFAULT_NUM_PREDICT,
-    frequency_penalty: float = DEFAULT_FREQUENCY_PENALTY,
-    presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
-    seed: int | None = None,
-    think: bool | None = None,
-    format: type[BaseModel] | None = None,
+    llm_config: LLMConfig | None = None,
 ) -> AsyncGenerator[AssistantMessage, None]:
     """
     Stream from LLM without any tool support.
@@ -69,18 +53,11 @@ async def chat_stream_no_tool(
     ollama_model, ollama_messages, options, _, ollama_format = build_chat_input(
         model=model,
         messages=messages,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        num_predict=num_predict,
-        frequency_penalty=frequency_penalty,
-        presence_penalty=presence_penalty,
-        seed=seed,
+        llm_config=llm_config,
         tools=None,
-        think=think,
-        format=format,
     )
 
+    msg_format = llm_config.format if llm_config else None
     async for chunk in _chat_stream_raw(
         model=ollama_model,
         messages=ollama_messages,
@@ -88,23 +65,15 @@ async def chat_stream_no_tool(
         tools=None,
         format=ollama_format,
     ):
-        yield cast(AssistantMessage, to_message(chunk, tools=None, format=format))
+        yield cast(AssistantMessage, to_message(chunk, tools=None, format=msg_format))
 
 
 async def chat_stream(
     model: OllamaModels,
     messages: list[BaseMessage],
-    temperature: float = DEFAULT_TEMPERATURE,
-    top_p: float = DEFAULT_TOP_P,
-    top_k: int = DEFAULT_TOP_K,
-    num_predict: int = DEFAULT_NUM_PREDICT,
-    frequency_penalty: float = DEFAULT_FREQUENCY_PENALTY,
-    presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
-    seed: int | None = None,
+    llm_config: LLMConfig | None = None,
     tools: list[Tool] | None = None,
     agent_tools: "list[AgentTool] | None" = None,
-    think: bool | None = None,
-    format: type[BaseModel] | None = None,
     tool_usage_context: "ToolUsageContext | None" = None,
     middleware: "list[ToolLoopMiddleware] | None" = None,
 ) -> AsyncGenerator[AssistantMessage | ToolMessage, None]:
@@ -128,17 +97,11 @@ async def chat_stream(
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        num_predict=num_predict,
-        frequency_penalty=frequency_penalty,
-        presence_penalty=presence_penalty,
-        seed=seed,
+        llm_config=llm_config,
         tools=tools,
-        think=think,
-        format=format,
     )
+
+    msg_format = llm_config.format if llm_config else None
 
     # Step 1 & 2: Stream from Ollama and collect until complete
     last_chunk: dict[str, Any] = {}
@@ -152,13 +115,13 @@ async def chat_stream(
         # For streaming, yield each chunk as it comes for real-time display
         # But we need to track the last chunk to get the complete message
         last_chunk = chunk
-        yield cast(AssistantMessage, to_message(chunk, tools=tools, format=format))
+        yield cast(AssistantMessage, to_message(chunk, tools=tools, format=msg_format))
 
     if not last_chunk:
         return
 
     # Get complete assistant message from last chunk
-    assistant_msg = to_message(last_chunk, tools=tools, format=format)
+    assistant_msg = to_message(last_chunk, tools=tools, format=msg_format)
 
     # Step 3: Execute tool calls if agent_tools provided and tools present
     if agent_tools and isinstance(assistant_msg, AssistantMessage) and assistant_msg.tool_calls:
@@ -179,16 +142,8 @@ async def chat_stream(
 async def chat_stream_raw(
     model: OllamaModels,
     messages: list[BaseMessage],
-    temperature: float = DEFAULT_TEMPERATURE,
-    top_p: float = DEFAULT_TOP_P,
-    top_k: int = DEFAULT_TOP_K,
-    num_predict: int = DEFAULT_NUM_PREDICT,
-    frequency_penalty: float = DEFAULT_FREQUENCY_PENALTY,
-    presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
-    seed: int | None = None,
+    llm_config: LLMConfig | None = None,
     tools: list[Tool] | None = None,
-    think: bool | None = None,
-    format: type[BaseModel] | None = None,
 ) -> AsyncGenerator[dict[str, Any], None]:
     """
     Raw stream - yields raw dict chunks from Ollama API.
@@ -197,16 +152,8 @@ async def chat_stream_raw(
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        num_predict=num_predict,
-        frequency_penalty=frequency_penalty,
-        presence_penalty=presence_penalty,
-        seed=seed,
+        llm_config=llm_config,
         tools=tools,
-        think=think,
-        format=format,
     )
 
     async for chunk in _chat_stream_raw(

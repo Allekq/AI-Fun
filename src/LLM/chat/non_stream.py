@@ -2,16 +2,8 @@ import asyncio
 from typing import TYPE_CHECKING, Any, cast
 
 import ollama
-from pydantic import BaseModel
 
-from ..constants import (
-    DEFAULT_FREQUENCY_PENALTY,
-    DEFAULT_NUM_PREDICT,
-    DEFAULT_PRESENCE_PENALTY,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_K,
-    DEFAULT_TOP_P,
-)
+from ..config import LLMConfig
 from ..models.messages import AssistantMessage, BaseMessage, ToolMessage
 from ..models.models import OllamaModels
 from ..tools.base import Tool
@@ -51,15 +43,7 @@ async def _chat_non_stream(
 async def chat_non_stream_no_tool(
     model: OllamaModels,
     messages: list[BaseMessage],
-    temperature: float = DEFAULT_TEMPERATURE,
-    top_p: float = DEFAULT_TOP_P,
-    top_k: int = DEFAULT_TOP_K,
-    num_predict: int = DEFAULT_NUM_PREDICT,
-    frequency_penalty: float = DEFAULT_FREQUENCY_PENALTY,
-    presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
-    seed: int | None = None,
-    think: bool | None = None,
-    format: type[BaseModel] | None = None,
+    llm_config: LLMConfig | None = None,
 ) -> AssistantMessage:
     """
     Call LLM without any tool support.
@@ -68,16 +52,7 @@ async def chat_non_stream_no_tool(
     ollama_model, ollama_messages, options, _, ollama_format = build_chat_input(
         model=model,
         messages=messages,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        num_predict=num_predict,
-        frequency_penalty=frequency_penalty,
-        presence_penalty=presence_penalty,
-        seed=seed,
-        tools=None,
-        think=think,
-        format=format,
+        llm_config=llm_config,
     )
 
     response = await _chat_non_stream(
@@ -88,23 +63,16 @@ async def chat_non_stream_no_tool(
         format=ollama_format,
     )
 
-    return cast(AssistantMessage, to_message(response, tools=None, format=format))
+    msg_format = llm_config.format if llm_config else None
+    return cast(AssistantMessage, to_message(response, tools=None, format=msg_format))
 
 
 async def chat_non_stream(
     model: OllamaModels,
     messages: list[BaseMessage],
-    temperature: float = DEFAULT_TEMPERATURE,
-    top_p: float = DEFAULT_TOP_P,
-    top_k: int = DEFAULT_TOP_K,
-    num_predict: int = DEFAULT_NUM_PREDICT,
-    frequency_penalty: float = DEFAULT_FREQUENCY_PENALTY,
-    presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
-    seed: int | None = None,
+    llm_config: LLMConfig | None = None,
     tools: list[Tool] | None = None,
     agent_tools: "list[AgentTool] | None" = None,
-    think: bool | None = None,
-    format: type[BaseModel] | None = None,
     tool_usage_context: "ToolUsageContext | None" = None,
     middleware: "list[ToolLoopMiddleware] | None" = None,
 ) -> tuple[AssistantMessage, list[ToolMessage]]:
@@ -127,16 +95,8 @@ async def chat_non_stream(
     ollama_model, ollama_messages, options, ollama_tools, ollama_format = build_chat_input(
         model=model,
         messages=messages,
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        num_predict=num_predict,
-        frequency_penalty=frequency_penalty,
-        presence_penalty=presence_penalty,
-        seed=seed,
+        llm_config=llm_config,
         tools=tools,
-        think=think,
-        format=format,
     )
 
     # Step 1: Call Ollama API
@@ -147,7 +107,8 @@ async def chat_non_stream(
         tools=ollama_tools,
         format=ollama_format,
     )
-    assistant_msg = to_message(response, tools=tools, format=format)
+    msg_format = llm_config.format if llm_config else None
+    assistant_msg = to_message(response, tools=tools, format=msg_format)
 
     # Step 2: Execute tool calls if agent_tools provided and tools present
     tool_messages: list[ToolMessage] = []

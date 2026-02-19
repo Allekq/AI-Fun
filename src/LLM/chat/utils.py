@@ -3,6 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from ..config import LLMConfig
 from ..constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
@@ -143,12 +144,13 @@ def to_message(
 def build_chat_input(
     model: OllamaModels,
     messages: list[BaseMessage],
-    temperature: float = DEFAULT_TEMPERATURE,
-    top_p: float = DEFAULT_TOP_P,
-    top_k: int = DEFAULT_TOP_K,
-    num_predict: int = DEFAULT_NUM_PREDICT,
-    frequency_penalty: float = DEFAULT_FREQUENCY_PENALTY,
-    presence_penalty: float = DEFAULT_PRESENCE_PENALTY,
+    llm_config: LLMConfig | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    top_k: int | None = None,
+    num_predict: int | None = None,
+    frequency_penalty: float | None = None,
+    presence_penalty: float | None = None,
     seed: int | None = None,
     tools: list[Tool] | None = None,
     think: bool | None = None,
@@ -158,19 +160,29 @@ def build_chat_input(
 ]:
     validate_messages(messages)
 
-    options = build_options(
-        temperature=temperature,
-        top_p=top_p,
-        top_k=top_k,
-        num_predict=num_predict,
-        frequency_penalty=frequency_penalty,
-        presence_penalty=presence_penalty,
-        seed=seed,
-        think=think,
-    )
+    if llm_config is not None:
+        config = llm_config
+    else:
+        config = LLMConfig(
+            temperature=temperature if temperature is not None else DEFAULT_TEMPERATURE,
+            top_p=top_p if top_p is not None else DEFAULT_TOP_P,
+            top_k=top_k if top_k is not None else DEFAULT_TOP_K,
+            num_predict=num_predict if num_predict is not None else DEFAULT_NUM_PREDICT,
+            frequency_penalty=frequency_penalty
+            if frequency_penalty is not None
+            else DEFAULT_FREQUENCY_PENALTY,
+            presence_penalty=presence_penalty
+            if presence_penalty is not None
+            else DEFAULT_PRESENCE_PENALTY,
+            seed=seed,
+            think=think,
+            format=format,
+        )
+
+    options = config.to_options_dict()
 
     ollama_tools = build_tools_for_chat_format(tools)
     ollama_messages = transform_messages(messages)
-    ollama_format = build_format(format)
+    ollama_format = config.get_format_schema()
 
     return model.to_ollama_name(), ollama_messages, options, ollama_tools, ollama_format

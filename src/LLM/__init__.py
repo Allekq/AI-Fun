@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from .chat.non_stream import chat_non_stream, chat_non_stream_no_tool
 from .chat.stream import chat_stream, chat_stream_no_tool, chat_stream_raw
 from .chat.tool_loop import chat_tool
+from .config import LLMConfig
 from .constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
@@ -33,6 +34,7 @@ __all__ = [
     "chat_stream_no_tool",
     "chat_stream_raw",
     "chat_tool",
+    "LLMConfig",
     "OllamaModels",
     "DEFAULT_MODEL",
     "get_model",
