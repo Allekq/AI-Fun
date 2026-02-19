@@ -3,6 +3,13 @@ import asyncio
 
 from src.commands import ask, chat_cli, handle_company_logo, handle_image_gen
 from src.constants import COMPANY_LOGO_COMMAND
+from src.ImageGen import DEFAULT_IMAGE_MODEL as DEFAULT_IMAGE_MODEL_ENUM
+from src.LLM import DEFAULT_MODEL
+from src.minigames.company_logo.constants import (
+    DEFAULT_CHAT_MODEL,
+    DEFAULT_IMAGE_MODEL,
+    DEFAULT_PROMPT_MODEL,
+)
 
 
 def parse_args():
@@ -12,7 +19,9 @@ def parse_args():
     # ASK
     ask_parser = subparsers.add_parser("ask", help="Ask a question to the LLM")
     ask_parser.add_argument("question", type=str, help="The question to ask")
-    ask_parser.add_argument("-m", "--model", type=str, default="qwen3:8b", help="Model to use")
+    ask_parser.add_argument(
+        "-m", "--model", type=str, default=DEFAULT_MODEL.value, help="Model to use"
+    )
     ask_parser.add_argument(
         "-s", "--stream", dest="stream", action="store_true", help="Stream the response"
     )
@@ -28,7 +37,9 @@ def parse_args():
 
     # CHAT
     chat_parser = subparsers.add_parser("chat", help="Start an interactive chat")
-    chat_parser.add_argument("-m", "--model", type=str, default="qwen3:8b", help="Model to use")
+    chat_parser.add_argument(
+        "-m", "--model", type=str, default=DEFAULT_MODEL.value, help="Model to use"
+    )
     chat_parser.add_argument(
         "-sys",
         "--system",
@@ -55,7 +66,7 @@ def parse_args():
     img_parser = subparsers.add_parser("img", help="Generate an image")
     img_parser.add_argument("prompt", type=str, help="The image prompt")
     img_parser.add_argument(
-        "-m", "--model", type=str, default="x/flux2-klein:4b", help="Model to use"
+        "-m", "--model", type=str, default=DEFAULT_IMAGE_MODEL_ENUM.value, help="Model to use"
     )
     img_parser.add_argument("-s", "--steps", type=int, default=4, help="Inference steps")
     img_parser.add_argument(
@@ -73,10 +84,17 @@ def parse_args():
         COMPANY_LOGO_COMMAND, help="Start the company logo minigame"
     )
     comp_parser.add_argument(
-        "-cm", "--chat-model", type=str, default="qwen3:8b", help="Chat model to use"
+        "-cm", "--chat-model", type=str, default=DEFAULT_CHAT_MODEL, help="Chat model to use"
     )
     comp_parser.add_argument(
-        "-im", "--image-model", type=str, default="x/flux2-klein:4b", help="Image model to use"
+        "-pm",
+        "--prompt-model",
+        type=str,
+        default=DEFAULT_PROMPT_MODEL,
+        help="Prompt enhancement model to use",
+    )
+    comp_parser.add_argument(
+        "-im", "--image-model", type=str, default=DEFAULT_IMAGE_MODEL, help="Image model to use"
     )
 
     return parser.parse_args()
@@ -99,7 +117,7 @@ def main():
             )
         )
     elif args.command == COMPANY_LOGO_COMMAND:
-        asyncio.run(handle_company_logo(args.chat_model, args.image_model))
+        asyncio.run(handle_company_logo(args.chat_model, args.prompt_model, args.image_model))
     else:
         print(f"Unknown command: {args.command}")
 

@@ -2,8 +2,6 @@ from pydantic import BaseModel
 
 from src.InfoGather.info_book import InfoBook
 from src.LLM import (
-    AssistantMessage,
-    HumanMessage,
     OllamaModels,
     SystemMessage,
     chat_non_stream_no_tool,
@@ -34,10 +32,9 @@ Respond with JSON containing "prompt" and "negative_prompt" fields. The negative
 
 def format_info_book_for_llm(info_book: InfoBook) -> str:
     lines = []
-    for field_name, field in info_book.fields.items():
+    for field in info_book.info:
         if field.is_filled():
-            value = field.value
-            lines.append(f"- {field_name}: {value}")
+            lines.append(f"- {field.name}: {field.value}")
     return "\n".join(lines)
 
 

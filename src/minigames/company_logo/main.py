@@ -9,6 +9,7 @@ from src.InfoGather import gather_conversation
 from src.LLM import AssistantMessage
 from src.LLM import get_model as get_llm_model
 from src.LLM.chat.conversation_logger import log_conversation
+from src.LLM.models.messages import BaseMessage
 from src.utility.info_book_logger import log_info_book
 
 from .constants import (
@@ -43,11 +44,12 @@ async def run_logo_minigame(
     print("=" * 50)
     print("  COMPANY LOGO GENERATOR")
     print("=" * 50)
+    print(f"\nUsing models: {chat_model}, {prompt_model}, {image_model}")
 
     if TEST_SKIP_INFO_BOOK:
         print("\n[TEST MODE] Skipping info book collection - using default info book")
         info_book = create_default_logo_info_book()
-        conversation = []
+        conversation: list[BaseMessage] = []
     else:
         print("\nI'll help you create a custom company logo!")
         print(

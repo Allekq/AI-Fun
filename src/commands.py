@@ -124,7 +124,8 @@ async def handle_image_gen(
 
 
 async def handle_company_logo(
-    chat_model: str = "qwen3:8b",
-    image_model: str = "x/flux2-klein:4b",
+    chat_model: str,
+    prompt_model: str,
+    image_model: str,
 ) -> None:
-    await run_logo_minigame(chat_model, image_model)
+    await run_logo_minigame(chat_model, prompt_model, image_model)
