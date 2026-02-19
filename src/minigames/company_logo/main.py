@@ -10,8 +10,9 @@ from src.LLM import get_model as get_llm_model
 from src.LLM.chat.conversation_logger import log_conversation
 from src.utility.info_book_logger import log_info_book
 
+from .constants import DEFAULT_CHAT_MODEL, DEFAULT_IMAGE_MODEL, DEFAULT_PROMPT_MODEL
 from .logo_info_book import create_logo_info_book
-from .prompt_builder import build_logo_prompt
+from .prompt_builder import build_enhanced_prompt_with_llm, build_logo_prompt
 
 LOG_NAME = "company_logo"
 
@@ -22,10 +23,12 @@ async def input_handler(question: str) -> str:
 
 
 async def run_logo_minigame(
-    chat_model: str = "qwen3:8b",
-    image_model: str = "x/flux2-klein:4b",
+    chat_model: str = DEFAULT_CHAT_MODEL,
+    prompt_model: str = DEFAULT_PROMPT_MODEL,
+    image_model: str = DEFAULT_IMAGE_MODEL,
 ) -> str | None:
     llm_model = get_llm_model(chat_model)
+    prompt_llm_model = get_llm_model(prompt_model)
     img_model = get_image_model(image_model)
 
     print("=" * 50)
@@ -59,13 +62,28 @@ async def run_logo_minigame(
     print("  GENERATING YOUR LOGO")
     print("=" * 50)
 
-    prompt, negative_prompt = build_logo_prompt(info_book)
+    try:
+        print("\n[1/2] Enhancing prompt with LLM...")
+        prompt, negative_prompt = await build_enhanced_prompt_with_llm(
+            info_book=info_book,
+            model=prompt_llm_model,
+        )
+        print("[2/2] Generating logo image...")
+    except Exception as e:
+        print(f"\n[WARNING] LLM prompt enhancement failed: {e}")
+        print("Falling back to default prompt builder...")
+        prompt, negative_prompt = build_logo_prompt(info_book)
+        print("Generating logo image...")
 
     print(f'\nPrompt: "{prompt}"')
+    print(f'\nNegative prompt: "{negative_prompt}"')
+
+    print("\nGeneration started...")
 
     request = ImageRequest(
         prompt=prompt,
         negative_prompt=negative_prompt,
+        num_inference_steps=12,
     )
 
     response = await generate_image(

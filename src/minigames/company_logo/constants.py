@@ -17,6 +17,10 @@ FIELD_DO_NOT_USE = "do_not_use"
 
 LOGO_GOAL = "Gather the information necessary to generate a company logo that fits the user's desires and the company's nature."
 
+DEFAULT_CHAT_MODEL = "qwen3:8b"
+DEFAULT_PROMPT_MODEL = "qwen3:8b"
+DEFAULT_IMAGE_MODEL = "x/flux2-klein:4b"
+
 ALL_FIELDS = [
     FIELD_COMPANY_NAME,
     FIELD_INDUSTRY,
