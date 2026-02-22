@@ -4,7 +4,7 @@ import asyncio
 from src.commands import ask, chat_cli, handle_company_logo, handle_image_gen
 from src.constants import COMPANY_LOGO_COMMAND
 from src.ImageGen import DEFAULT_IMAGE_MODEL as DEFAULT_IMAGE_MODEL_ENUM
-from src.LLM import DEFAULT_MODEL
+from src.LLM import DEFAULT_MODEL, LLMConfig
 from src.minigames.company_logo.constants import (
     DEFAULT_CHAT_MODEL,
     DEFAULT_IMAGE_MODEL,
@@ -73,12 +73,6 @@ def parse_args():
         "-np", "--negative-prompt", type=str, default=None, help="Negative prompt"
     )
 
-    # INFO GATHER
-    info_gather_parser = subparsers.add_parser(
-        "info_gather", help="Gather information from the web"
-    )
-    info_gather_parser.add_argument("query", type=str, help="The query to gather information about")
-
     # COMPANY LOGO MINIGAME
     comp_parser = subparsers.add_parser(
         COMPANY_LOGO_COMMAND, help="Start the company logo minigame"
@@ -104,9 +98,11 @@ def main():
     args = parse_args()
 
     if args.command == "ask":
-        asyncio.run(ask(args.question, args.model, args.stream, args.think))
+        llm_config = LLMConfig(think=args.think) if args.think else None
+        asyncio.run(ask(args.question, args.model, args.stream, llm_config))
     elif args.command == "chat":
-        asyncio.run(chat_cli(args.model, args.system, args.stream, args.think))
+        llm_config = LLMConfig(think=args.think) if args.think else None
+        asyncio.run(chat_cli(args.model, args.system, args.stream, llm_config))
     elif args.command == "img":
         asyncio.run(
             handle_image_gen(
