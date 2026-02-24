@@ -30,14 +30,15 @@ These are language-agnostic coding principles to keep code readable, maintainabl
 
 ## Type Safety
 - No `# type: ignore` or `noqa` comments
-- Use TypedDict for dict structures with known shapes
-- Code must compile without type errors
+- For dict structures with known shapes, use a dataclass
+- Code must compile without type errorss
 
 ## Code Organization
 - DRY (dont repete yourself) rules must be respected. (reusing a utility function is good, writing repeted functionality is bad)
 - Utility functions in dedicated files 
 - One clear responsibility per file
 - Clean separation: core logic → utilities → entry points
+- Use config dataclasses for functions with 4+ optional parameters; avoid long parameter lists and duplicated default values.
 
 ## Imports
 - Use explicit relative imports within packages

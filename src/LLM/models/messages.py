@@ -21,6 +21,7 @@ class BaseMessage(ABC):
 @dataclass
 class HumanMessage(BaseMessage):
     name: str | None = None
+    images: list[str | bytes] | None = None
 
     @property
     def role(self) -> str:
@@ -30,6 +31,8 @@ class HumanMessage(BaseMessage):
         result = super().to_ollama_dict()
         if self.name:
             result["name"] = self.name
+        if self.images:
+            result["images"] = self.images
         return result
 
 
