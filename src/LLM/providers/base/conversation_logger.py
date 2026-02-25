@@ -1,6 +1,8 @@
 from datetime import datetime
 from pathlib import Path
 
+from src.utility.save_text import save_text
+
 from ...models.messages import (
     AssistantMessage,
     BaseMessage,
@@ -8,7 +10,6 @@ from ...models.messages import (
     SystemMessage,
     ToolMessage,
 )
-from src.utility.save_text import save_text
 
 LOGS_DIR = Path("Logs")
 

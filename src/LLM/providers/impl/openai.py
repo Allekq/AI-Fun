@@ -2,13 +2,13 @@ import asyncio
 import os
 from collections.abc import AsyncGenerator
 from enum import Enum
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from openai import AsyncOpenAI
 
 from ...config import LLMConfig
 from ...models.messages import AssistantMessage, BaseMessage, ToolMessage
-from ...tools.base import AgentTool, Tool
+from ...tools.base import AgentTool
 from ..base import BaseProvider
 from ..base.tool_usage import default_execute_tool_calls
 from ..base.utils import (

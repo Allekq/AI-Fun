@@ -1,8 +1,5 @@
 from pydantic import BaseModel
 
-from .providers.usage import chat_non_stream, chat_non_stream_no_tool
-from .providers.usage import chat_stream, chat_stream_no_tool
-from .providers.usage import chat_tool
 from .config import LLMConfig
 from .constants import (
     DEFAULT_FREQUENCY_PENALTY,
@@ -16,6 +13,13 @@ from .models.messages import AssistantMessage, BaseMessage, HumanMessage, System
 from .models.tool_context import ToolLoopMiddleware, ToolUsageContext
 from .providers import BaseProvider, get_provider
 from .providers.impl.ollama import DEFAULT_MODEL, OllamaModels, get_model
+from .providers.usage import (
+    chat_non_stream,
+    chat_non_stream_no_tool,
+    chat_stream,
+    chat_stream_no_tool,
+    chat_tool,
+)
 from .tools import agent_tools_to_tools_and_handlers
 from .tools.base import AgentTool, Tool, ToolCall
 from .tools.context import (

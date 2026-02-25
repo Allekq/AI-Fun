@@ -1,13 +1,11 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
-from typing import TYPE_CHECKING, Any
-
-from pydantic import BaseModel
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...config import LLMConfig
     from ...models.messages import AssistantMessage, BaseMessage, ToolMessage
-    from ...tools.base import AgentTool, Tool
+    from ...tools.base import AgentTool
 
 
 class BaseProvider(ABC):
