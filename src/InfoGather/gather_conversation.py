@@ -7,6 +7,7 @@ from src.LLM import (
     HumanMessage,
     LLMConfig,
     OllamaModels,
+    OllamaProvider,
     SystemMessage,
     ToolLoopMiddleware,
     ToolUsageContext,
@@ -39,12 +40,11 @@ class QuestionLimitMiddleware(ToolLoopMiddleware):
     async def on_after_llm_call(self, assistant_msg: Any, context: ToolUsageContext) -> None:
         pass
 
-    async def on_tool_call(self, tool_call: Any, context: ToolUsageContext) -> None:
+    async def on_tool_call_completed(
+        self, tool_call: Any, tool_message: Any, context: ToolUsageContext
+    ) -> None:
         if tool_call.tool.name == "ask_user":
             self.ask_count += 1
-
-    async def on_tool_result(self, tool_name: str, result: str, context: ToolUsageContext) -> None:
-        pass
 
     async def should_continue(self, tool_call_count: int, context: ToolUsageContext) -> bool:
         if self.ask_count >= self.limit:
@@ -146,6 +146,10 @@ async def gather_conversation(
     if extra_tools:
         tools.extend(extra_tools)
 
+    llm_config = LLMConfig(**chat_kwargs) if chat_kwargs else None
+
+    provider = OllamaProvider(model)
+
     question_middleware: ToolLoopMiddleware = QuestionLimitMiddleware(
         limit=question_limit, warn_at=warn_at_question
     )
@@ -153,15 +157,13 @@ async def gather_conversation(
     if middleware:
         all_middleware.extend(middleware)
 
-    llm_config = LLMConfig(**chat_kwargs) if chat_kwargs else None
-
     additions = await llm_chat_tool(
-        model=model,
+        provider=provider,
         messages=cast(list[BaseMessage], messages),
         agent_tools=tools,
         stream=stream,
-        middleware=all_middleware,
         llm_config=llm_config,
+        middleware=all_middleware,
     )
 
     all_messages = list(messages)
@@ -171,7 +173,7 @@ async def gather_conversation(
         await fill_unfilled_fields(
             messages=all_messages,
             info_book=info_book,
-            model=model,
+            provider=provider,
             llm_config=llm_config,
         )
 

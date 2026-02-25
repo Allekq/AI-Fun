@@ -2,24 +2,27 @@ import inspect
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..models.messages import AssistantMessage, ToolMessage
-    from ..models.tool_context import ToolLoopMiddleware, ToolUsageContext
-    from ..tools.base import AgentTool
+    from ...models.messages import AssistantMessage, ToolMessage
+    from ...models.tool_context import ToolLoopMiddleware, ToolUsageContext
+    from ...tools.base import AgentTool
 
 
-async def execute_tool_calls(
+async def default_execute_tool_calls(
     assistant_msg: "AssistantMessage",
     agent_tools: "list[AgentTool]",
     tool_usage_context: "ToolUsageContext | None" = None,
     middleware: "list[ToolLoopMiddleware] | None" = None,
 ) -> list["ToolMessage"]:
     """
-    Execute tool calls from an already-received assistant message.
+    Default implementation for executing tool calls from an assistant message.
     This is called AFTER getting the LLM response, not by the LLM itself.
 
     Takes agent_tools list - extracts handlers internally.
+
+    Providers can use this function for standard OpenAI-compatible tool execution.
     """
-    from ..models.messages import ToolMessage
+    from ...models.messages import ToolMessage
+    from ...models.tool_context import ToolUsageContext
 
     tool_calls = assistant_msg.tool_calls or []
     if not tool_calls:
@@ -28,14 +31,9 @@ async def execute_tool_calls(
     ctx = tool_usage_context or ToolUsageContext()
     tool_messages: list[ToolMessage] = []
 
-    # Build handlers dict from agent_tools
     handlers = {tool.name: tool.execute for tool in agent_tools}
 
     for tc in tool_calls:
-        if middleware:
-            for mw in middleware:
-                await mw.on_tool_call(tc, ctx)
-
         result_str = ""
         if tc.tool.name in handlers:
             handler = handlers[tc.tool.name]
@@ -64,6 +62,6 @@ async def execute_tool_calls(
 
         if middleware:
             for mw in middleware:
-                await mw.on_tool_result(tc.tool.name, result_str, ctx)
+                await mw.on_tool_call_completed(tc, tool_msg, ctx)
 
     return tool_messages

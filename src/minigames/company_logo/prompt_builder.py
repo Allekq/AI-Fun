@@ -4,6 +4,7 @@ from src.InfoGather.info_book import InfoBook
 from src.LLM import (
     LLMConfig,
     OllamaModels,
+    OllamaProvider,
     SystemMessage,
     chat_non_stream_no_tool,
 )
@@ -47,8 +48,10 @@ async def build_enhanced_prompt_with_llm(
 
     system_prompt = SYSTEM_PROMPT.format(info_book_content=info_book_content)
 
+    provider = OllamaProvider(model)
+
     response = await chat_non_stream_no_tool(
-        model=model,
+        provider=provider,
         messages=[
             SystemMessage(content=system_prompt),
         ],

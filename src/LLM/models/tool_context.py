@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .messages import BaseMessage
+    from .messages import BaseMessage, ToolMessage
 
 
 @dataclass
@@ -20,10 +20,12 @@ class ToolLoopMiddleware:
     async def on_after_llm_call(self, assistant_msg: Any, context: ToolUsageContext) -> None:
         pass
 
-    async def on_tool_call(self, tool_call: Any, context: ToolUsageContext) -> None:
-        pass
-
-    async def on_tool_result(self, tool_name: str, result: str, context: ToolUsageContext) -> None:
+    async def on_tool_call_completed(
+        self,
+        tool_call: Any,
+        tool_message: "ToolMessage",
+        context: ToolUsageContext,
+    ) -> None:
         pass
 
     async def should_continue(self, tool_call_count: int, context: ToolUsageContext) -> bool:

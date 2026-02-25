@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from .chat.non_stream import chat_non_stream, chat_non_stream_no_tool
-from .chat.stream import chat_stream, chat_stream_no_tool, chat_stream_raw
-from .chat.tool_loop import chat_tool
+from .providers.usage import chat_non_stream, chat_non_stream_no_tool
+from .providers.usage import chat_stream, chat_stream_no_tool
+from .providers.usage import chat_tool
 from .config import LLMConfig
 from .constants import (
     DEFAULT_FREQUENCY_PENALTY,
@@ -13,8 +13,9 @@ from .constants import (
     DEFAULT_TOP_P,
 )
 from .models.messages import AssistantMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
-from .models.models import DEFAULT_MODEL, OllamaModels, get_model
 from .models.tool_context import ToolLoopMiddleware, ToolUsageContext
+from .providers import BaseProvider, get_provider
+from .providers.impl.ollama import DEFAULT_MODEL, OllamaModels, get_model
 from .tools import agent_tools_to_tools_and_handlers
 from .tools.base import AgentTool, Tool, ToolCall
 from .tools.context import (
@@ -24,6 +25,15 @@ from .tools.context import (
 )
 from .tools.factory import build_usable_tools
 
+
+def __getattr__(name):
+    if name == "OllamaProvider":
+        return get_provider("ollama")
+    elif name == "OpenAIProvider":
+        return get_provider("openai")
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 __all__ = [
     "AgentTool",
     "agent_tools_to_tools_and_handlers",
@@ -32,11 +42,13 @@ __all__ = [
     "chat_non_stream_no_tool",
     "chat_stream",
     "chat_stream_no_tool",
-    "chat_stream_raw",
     "chat_tool",
-    "LLMConfig",
-    "OllamaModels",
     "DEFAULT_MODEL",
+    "LLMConfig",
+    "BaseProvider",
+    "OllamaProvider",
+    "OllamaModels",
+    "OpenAIProvider",
     "get_model",
     "BaseMessage",
     "HumanMessage",

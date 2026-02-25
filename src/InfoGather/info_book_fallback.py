@@ -5,9 +5,9 @@ from pydantic import BaseModel
 from src.LLM import (
     AssistantMessage,
     BaseMessage,
+    BaseProvider,
     HumanMessage,
     LLMConfig,
-    OllamaModels,
     ToolMessage,
     chat_non_stream_no_tool,
 )
@@ -75,7 +75,7 @@ def _format_conversation(messages: list[BaseMessage]) -> str:
 async def fill_unfilled_fields(
     messages: list[BaseMessage],
     info_book: Any,
-    model: OllamaModels,
+    provider: BaseProvider,
     llm_config: LLMConfig | None = None,
 ) -> Any:
     fallback_fields = info_book.get_fallback_enabled_fields()
@@ -94,7 +94,7 @@ async def fill_unfilled_fields(
     config.format = FallbackResponse
 
     response = await chat_non_stream_no_tool(
-        model=model,
+        provider=provider,
         messages=[HumanMessage(content=prompt)],
         llm_config=config,
     )

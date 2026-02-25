@@ -8,6 +8,7 @@ from src.LLM import (
     BaseMessage,
     HumanMessage,
     LLMConfig,
+    OllamaProvider,
     SystemMessage,
     chat_non_stream_no_tool,
     chat_stream,
@@ -23,11 +24,14 @@ async def handle_chat(
     llm_config: LLMConfig | None = None,
 ) -> str:
     model = get_model(model_name)
+    provider = OllamaProvider(model)
     accumulated_content = ""
 
     if stream:
         in_thinking = False
-        async for response in chat_stream(model=model, messages=messages, llm_config=llm_config):
+        async for response in chat_stream(
+            provider=provider, messages=messages, llm_config=llm_config
+        ):
             if isinstance(response, AssistantMessage) and response.thinking:
                 if not in_thinking:
                     in_thinking = True
@@ -43,7 +47,7 @@ async def handle_chat(
                 print("\n")
     else:
         response = await chat_non_stream_no_tool(
-            model=model, messages=messages, llm_config=llm_config
+            provider=provider, messages=messages, llm_config=llm_config
         )
         print(response.content)
         accumulated_content = response.content

@@ -3,8 +3,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from ..config import LLMConfig
-from ..constants import (
+from ...config import LLMConfig
+from ...constants import (
     DEFAULT_FREQUENCY_PENALTY,
     DEFAULT_NUM_PREDICT,
     DEFAULT_PRESENCE_PENALTY,
@@ -12,10 +12,8 @@ from ..constants import (
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
 )
-from ..models.messages import AssistantMessage, BaseMessage, ToolMessage
-from ..models.models import OllamaModels
-from ..tools.base import Tool, ToolCall
-from .transformation import transform_messages, validate_messages
+from ...models.messages import AssistantMessage, BaseMessage, ToolMessage
+from ...tools.base import Tool, ToolCall
 
 
 def build_format(format: type[BaseModel] | None) -> dict[str, Any] | None:
@@ -49,6 +47,37 @@ def build_options(
     return options
 
 
+def build_llm_config(
+    llm_config: LLMConfig | None = None,
+    temperature: float | None = None,
+    top_p: float | None = None,
+    top_k: int | None = None,
+    num_predict: int | None = None,
+    frequency_penalty: float | None = None,
+    presence_penalty: float | None = None,
+    seed: int | None = None,
+    think: bool | None = None,
+    format: type[BaseModel] | None = None,
+) -> LLMConfig:
+    if llm_config is not None:
+        return llm_config
+    return LLMConfig(
+        temperature=temperature if temperature is not None else DEFAULT_TEMPERATURE,
+        top_p=top_p if top_p is not None else DEFAULT_TOP_P,
+        top_k=top_k if top_k is not None else DEFAULT_TOP_K,
+        num_predict=num_predict if num_predict is not None else DEFAULT_NUM_PREDICT,
+        frequency_penalty=frequency_penalty
+        if frequency_penalty is not None
+        else DEFAULT_FREQUENCY_PENALTY,
+        presence_penalty=presence_penalty
+        if presence_penalty is not None
+        else DEFAULT_PRESENCE_PENALTY,
+        seed=seed,
+        think=think,
+        format=format,
+    )
+
+
 def build_tools_for_chat_format(tools: list[Tool] | None) -> list[dict[str, Any]] | None:
     if tools is None:
         return None
@@ -65,7 +94,7 @@ def build_tools_for_chat_format(tools: list[Tool] | None) -> list[dict[str, Any]
     ]
 
 
-def _parse_tool_calls(
+def parse_tool_calls(
     raw_tool_calls: list[dict[str, Any]], tools: list[Tool] | None
 ) -> list[ToolCall] | None:
     if not raw_tool_calls or not tools:
@@ -77,20 +106,16 @@ def _parse_tool_calls(
         func = raw_call.get("function", {})
         tool_name = func.get("name")
         if tool_name in tool_map:
-            # Robust handling: Ollama can return arguments as either string (JSON) or dict
             arguments_raw = func.get("arguments", "{}")
             if isinstance(arguments_raw, str):
-                # Raw JSON string from Ollama server
                 try:
                     arguments = json.loads(arguments_raw)
                 except json.JSONDecodeError as e:
                     print(f"ERROR - Failed to parse tool arguments for {tool_name}: {e}")
                     arguments = {}
             elif isinstance(arguments_raw, dict):
-                # Already parsed as dict
                 arguments = arguments_raw
             else:
-                # Unexpected type, fallback to empty dict
                 print(f"ERROR - Unexpected arguments type for {tool_name}: {type(arguments_raw)}")
                 arguments = {}
             tool_calls.append(
@@ -121,7 +146,7 @@ def to_message(
         )
 
     raw_tool_calls = message.get("tool_calls")
-    tool_calls = _parse_tool_calls(raw_tool_calls, tools) if raw_tool_calls else None
+    tool_calls = parse_tool_calls(raw_tool_calls, tools) if raw_tool_calls else None
 
     parsed: BaseModel | None = None
     content = message.get("content", "")
@@ -141,48 +166,9 @@ def to_message(
     )
 
 
-def build_chat_input(
-    model: OllamaModels,
-    messages: list[BaseMessage],
-    llm_config: LLMConfig | None = None,
-    temperature: float | None = None,
-    top_p: float | None = None,
-    top_k: int | None = None,
-    num_predict: int | None = None,
-    frequency_penalty: float | None = None,
-    presence_penalty: float | None = None,
-    seed: int | None = None,
-    tools: list[Tool] | None = None,
-    think: bool | None = None,
-    format: type[BaseModel] | None = None,
-) -> tuple[
-    str, list[dict[str, Any]], dict[str, Any], list[dict[str, Any]] | None, dict[str, Any] | None
-]:
-    validate_messages(messages)
+def to_openai_dict(message: BaseMessage) -> dict[str, Any]:
+    return message.to_ollama_dict()
 
-    if llm_config is not None:
-        config = llm_config
-    else:
-        config = LLMConfig(
-            temperature=temperature if temperature is not None else DEFAULT_TEMPERATURE,
-            top_p=top_p if top_p is not None else DEFAULT_TOP_P,
-            top_k=top_k if top_k is not None else DEFAULT_TOP_K,
-            num_predict=num_predict if num_predict is not None else DEFAULT_NUM_PREDICT,
-            frequency_penalty=frequency_penalty
-            if frequency_penalty is not None
-            else DEFAULT_FREQUENCY_PENALTY,
-            presence_penalty=presence_penalty
-            if presence_penalty is not None
-            else DEFAULT_PRESENCE_PENALTY,
-            seed=seed,
-            think=think,
-            format=format,
-        )
 
-    options = config.to_options_dict()
-
-    ollama_tools = build_tools_for_chat_format(tools)
-    ollama_messages = transform_messages(messages)
-    ollama_format = config.get_format_schema()
-
-    return model.to_ollama_name(), ollama_messages, options, ollama_tools, ollama_format
+def transform_messages(messages: list[BaseMessage]) -> list[dict[str, Any]]:
+    return [msg.to_ollama_dict() for msg in messages]

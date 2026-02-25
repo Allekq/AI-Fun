@@ -8,7 +8,7 @@ from src.ImageGen.types import ImageRequest
 from src.InfoGather import gather_conversation
 from src.LLM import AssistantMessage
 from src.LLM import get_model as get_llm_model
-from src.LLM.chat.conversation_logger import log_conversation
+from src.LLM.providers.base.conversation_logger import log_conversation
 from src.LLM.models.messages import BaseMessage
 from src.utility.info_book_logger import log_info_book
 
