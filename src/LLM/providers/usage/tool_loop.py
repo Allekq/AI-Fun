@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 async def chat_tool(
     provider: BaseProvider,
     messages: list[BaseMessage],
-    agent_tools: "list[AgentTool] | None" = None,
+    agent_tools: "list[AgentTool]",
     stream: bool = False,
     max_tool_calls: int = 20,
     llm_config: LLMConfig | None = None,
@@ -23,11 +23,8 @@ async def chat_tool(
 ) -> list[BaseMessage]:
     """
     Main tool loop - repeatedly calls LLM until no more tool calls.
-    Provider handles tool execution internally, middleware observes via callbacks.
+    Middleware observes tool execution via callbacks after provider returns.
     """
-    if not agent_tools:
-        raise ValueError("agent_tools must be provided")
-
     if middleware is None:
         middleware = []
 
@@ -78,6 +75,13 @@ async def chat_tool(
         for tm in tool_messages:
             new_messages.append(tm)
             current_messages.append(tm)
+
+            if tm.tool_name and assistant_msg.tool_calls:
+                for tc in assistant_msg.tool_calls:
+                    if tc.id == tm.tool_call_id:
+                        for mw in middleware:
+                            await mw.on_tool_call_completed(tc, tm, tool_usage_context)
+                        break
 
         injections: list[BaseMessage] = []
         for mw in middleware:

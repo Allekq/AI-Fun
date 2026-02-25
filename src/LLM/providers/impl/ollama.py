@@ -96,11 +96,11 @@ class OllamaProvider(BaseProvider):
         self,
         messages: list[BaseMessage],
         llm_config: LLMConfig | None = None,
-        tools: list[Tool] | None = None,
         agent_tools: list[AgentTool] | None = None,
     ) -> tuple[AssistantMessage, list[ToolMessage]]:
         config = build_llm_config(llm_config)
 
+        tools = None
         if agent_tools:
             from ...tools import agent_tools_to_tools_and_handlers
 
@@ -135,11 +135,11 @@ class OllamaProvider(BaseProvider):
         self,
         messages: list[BaseMessage],
         llm_config: LLMConfig | None = None,
-        tools: list[Tool] | None = None,
         agent_tools: list[AgentTool] | None = None,
     ) -> AsyncGenerator[AssistantMessage | ToolMessage, None]:
         config = build_llm_config(llm_config)
 
+        tools = None
         if agent_tools:
             from ...tools import agent_tools_to_tools_and_handlers
 

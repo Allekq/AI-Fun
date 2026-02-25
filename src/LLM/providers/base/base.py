@@ -18,18 +18,16 @@ class BaseProvider(ABC):
         self,
         messages: list["BaseMessage"],
         llm_config: "LLMConfig | None" = None,
-        tools: "list[Tool] | None" = None,
         agent_tools: "list[AgentTool] | None" = None,
     ) -> "tuple[AssistantMessage, list[ToolMessage]]":
         """
         Call the LLM and return the response.
 
-        The provider handles all message transformation, API calls, and tool execution.
-        Pass agent_tools to enable tool calling. Without agent_tools, no tools are available.
+        Provider handles message transformation, API calls, and tool execution.
+        Pass agent_tools to enable tool calling.
 
         Returns:
-            tuple: (assistant_message, tool_messages) - tool_messages will be empty
-                   if no tool calls were made or agent_tools not provided.
+            tuple: (assistant_message, tool_messages)
         """
         pass
 
@@ -38,16 +36,10 @@ class BaseProvider(ABC):
         self,
         messages: list["BaseMessage"],
         llm_config: "LLMConfig | None" = None,
-        tools: "list[Tool] | None" = None,
         agent_tools: "list[AgentTool] | None" = None,
     ) -> "AsyncGenerator[AssistantMessage | ToolMessage, None]":
         """
         Stream responses from the LLM.
-
-        Similar to chat(), but yields chunks as they arrive.
-        Pass agent_tools to enable tool calling. Without agent_tools, no tools are available.
-
-        Yields:
-            AssistantMessage chunks, and ToolMessages after completion if tool calls exist.
+        Yields AssistantMessage chunks, then ToolMessages if tool calls executed.
         """
         yield  # type: ignore

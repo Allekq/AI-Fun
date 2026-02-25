@@ -13,10 +13,7 @@ async def chat_non_stream_no_tool(
     messages: list[BaseMessage],
     llm_config: LLMConfig | None = None,
 ) -> AssistantMessage:
-    """
-    Call LLM without any tool support.
-    Returns just the AssistantMessage - no tool execution.
-    """
+    """Call LLM without tools. Returns just the AssistantMessage."""
     assistant_msg, _ = await provider.chat(
         messages=messages,
         llm_config=llm_config,
@@ -31,10 +28,7 @@ async def chat_non_stream(
     llm_config: LLMConfig | None = None,
     agent_tools: "list[AgentTool] | None" = None,
 ) -> tuple[AssistantMessage, list[ToolMessage]]:
-    """
-    Call LLM with optional tool support.
-    Pass agent_tools to enable tool execution.
-    """
+    """Call LLM with optional tool support."""
     return await provider.chat(
         messages=messages,
         llm_config=llm_config,

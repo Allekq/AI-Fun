@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...models.messages import AssistantMessage, ToolMessage
-    from ...models.tool_context import ToolLoopMiddleware, ToolUsageContext
+    from ...models.tool_context import ToolUsageContext
     from ...tools.base import AgentTool
 
 
@@ -11,15 +11,10 @@ async def default_execute_tool_calls(
     assistant_msg: "AssistantMessage",
     agent_tools: "list[AgentTool]",
     tool_usage_context: "ToolUsageContext | None" = None,
-    middleware: "list[ToolLoopMiddleware] | None" = None,
 ) -> list["ToolMessage"]:
     """
-    Default implementation for executing tool calls from an assistant message.
-    This is called AFTER getting the LLM response, not by the LLM itself.
-
-    Takes agent_tools list - extracts handlers internally.
-
-    Providers can use this function for standard OpenAI-compatible tool execution.
+    Execute tool calls from an assistant message.
+    Provider calls this after getting LLM response.
     """
     from ...models.messages import ToolMessage
     from ...models.tool_context import ToolUsageContext
@@ -59,9 +54,5 @@ async def default_execute_tool_calls(
             tool_name=tc.tool.name,
         )
         tool_messages.append(tool_msg)
-
-        if middleware:
-            for mw in middleware:
-                await mw.on_tool_call_completed(tc, tool_msg, ctx)
 
     return tool_messages
