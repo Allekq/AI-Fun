@@ -86,9 +86,9 @@ class OllamaProvider(BaseProvider):
                 stream=True,
             )
 
-        stream = await asyncio.to_thread(_call_ollama_stream)
-        for chunk in stream:
-            yield chunk
+        stream_sync = cast(Any, await asyncio.to_thread(_call_ollama_stream))
+        for chunk in stream_sync:
+            yield chunk.model_dump()
 
     async def chat(
         self,

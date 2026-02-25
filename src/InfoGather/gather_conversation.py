@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any
 
 from src.InfoGather.constants import InputHandler
 from src.LLM import (
@@ -7,7 +7,6 @@ from src.LLM import (
     HumanMessage,
     LLMConfig,
     OllamaModels,
-    OllamaProvider,
     SystemMessage,
     ToolLoopMiddleware,
     ToolUsageContext,
@@ -15,6 +14,7 @@ from src.LLM import (
 from src.LLM import (
     chat_tool as llm_chat_tool,
 )
+from src.LLM.providers import BaseProvider
 from src.LLM.tools import describe_tools_for_prompt
 
 from .info_book import InfoBook
@@ -83,6 +83,7 @@ async def gather_conversation(
     warn_at_question: int = 6,
     middleware: list[ToolLoopMiddleware] | None = None,
     system_prompt_addon: str | None = None,
+    provider: BaseProvider | None = None,
     **chat_kwargs: Any,
 ) -> tuple[InfoBook, list[BaseMessage]]:
     """
@@ -148,7 +149,10 @@ async def gather_conversation(
 
     llm_config = LLMConfig(**chat_kwargs) if chat_kwargs else None
 
-    provider = OllamaProvider(model)
+    if provider is None:
+        from src.LLM.providers.impl.ollama import OllamaProvider
+
+        provider = OllamaProvider(model)
 
     question_middleware: ToolLoopMiddleware = QuestionLimitMiddleware(
         limit=question_limit, warn_at=warn_at_question
@@ -159,7 +163,7 @@ async def gather_conversation(
 
     additions = await llm_chat_tool(
         provider=provider,
-        messages=cast(list[BaseMessage], messages),
+        messages=messages,
         agent_tools=tools,
         stream=stream,
         llm_config=llm_config,
