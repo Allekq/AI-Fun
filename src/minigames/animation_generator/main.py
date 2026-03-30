@@ -113,6 +113,7 @@ def _save_plan_manifest(
     continuity_refiner_model: str | None,
     generated_frames: list[dict[str, str]],
     used_frame_prompts: dict[int, str],
+    continuity_analyses: dict[int, dict[str, object]],
 ) -> None:
     frame_prompts = [
         {
@@ -135,6 +136,7 @@ def _save_plan_manifest(
         "continuity_refiner_model": continuity_refiner_model,
         "plan": plan.model_dump(),
         "frame_prompts": frame_prompts,
+        "continuity_analyses": continuity_analyses,
         "generated_frames": generated_frames,
     }
     plan_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -221,6 +223,7 @@ async def run_animation_generator(
 
         generated_frames: list[dict[str, str]] = []
         used_frame_prompts: dict[int, str] = {}
+        continuity_analyses: dict[int, dict[str, object]] = {}
         _save_plan_manifest(
             plan_path=plan_path,
             plan=plan,
@@ -234,6 +237,7 @@ async def run_animation_generator(
             continuity_refiner_model=continuity_model_name,
             generated_frames=generated_frames,
             used_frame_prompts=used_frame_prompts,
+            continuity_analyses=continuity_analyses,
         )
 
         previous_frame_path: Path | None = None
@@ -244,13 +248,15 @@ async def run_animation_generator(
             generation_prompt = _build_frame_prompt(plan, frame)
             if use_continuity_refiner and previous_frame_path is not None:
                 try:
-                    generation_prompt = await refine_frame_prompt_from_previous_frame(
+                    continuity_result = await refine_frame_prompt_from_previous_frame(
                         global_prompt=plan.global_prompt,
                         frame_prompt=frame.prompt,
                         motion_beat=frame.motion_beat,
                         previous_frame_path=str(previous_frame_path),
                         model=continuity_model,
                     )
+                    generation_prompt = continuity_result.prompt
+                    continuity_analyses[frame.frame_number] = continuity_result.model_dump()
                     print("Using previous frame as a continuity reference.")
                 except Exception as exc:
                     print(f"[WARNING] Continuity refinement failed: {exc}")
@@ -300,6 +306,7 @@ async def run_animation_generator(
                 continuity_refiner_model=continuity_model_name,
                 generated_frames=generated_frames,
                 used_frame_prompts=used_frame_prompts,
+                continuity_analyses=continuity_analyses,
             )
             print(f"Saved {final_path.name} ({duration:.1f}s)")
     except asyncio.CancelledError:

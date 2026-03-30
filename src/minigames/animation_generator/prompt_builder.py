@@ -24,6 +24,11 @@ class AnimationPlanResponse(BaseModel):
 
 
 class FrameContinuityPromptResponse(BaseModel):
+    observed_subject: str = Field(min_length=1)
+    observed_background: str = Field(min_length=1)
+    observed_size_and_position: str = Field(min_length=1)
+    preserved_details: list[str] = Field(min_length=1)
+    target_change: str = Field(min_length=1)
     prompt: str = Field(min_length=1)
 
 
@@ -67,15 +72,24 @@ CONTINUITY_REWRITE_SYSTEM_PROMPT = """You are refining an image-generation promp
 reference image from the immediately previous moment in a sequence.
 
 Rules:
-- Return valid JSON with a single `prompt` field.
+- Return valid JSON matching the schema.
+- Inspect the image carefully and describe literal visible traits instead of vague summaries.
+- Pay special attention to: silhouette, number of tips or lobes, softness or sharpness of edges,
+  glow or halo, brightness, palette, subject position, subject size relative to the canvas,
+  contact with the ground plane, reflections or shadows, and how much empty space surrounds it.
 - Preserve the same background, camera framing, lighting, palette, and subject identity from the
   reference image unless the target moment explicitly changes one of those.
 - Advance the subject only slightly toward the target moment.
 - Describe exactly one clear subject in one isolated still image.
 - If the target moment involves growth, expansion, or ignition, explicitly describe how large the
-  subject appears in the frame now.
+  subject appears in the frame now, and describe the new size in concrete on-screen terms.
+- In `target_change`, explain the exact incremental change from the reference image to the new
+  image, especially for size, height, width, or flame intensity.
+- In `prompt`, restate the important preserved visual traits from the reference image so the next
+  model does not have to infer them.
 - Do not mention the reference image, previous frame, sequence, animation, timeline, collage,
   storyboard, split-screen, or multiple poses.
+- Do not invent extra subjects or decorative elements that are not visible or requested.
 """
 
 
@@ -133,7 +147,7 @@ async def refine_frame_prompt_from_previous_frame(
     motion_beat: str,
     previous_frame_path: str,
     model: OllamaModels,
-) -> str:
+) -> FrameContinuityPromptResponse:
     provider = OllamaProvider(model)
 
     response = await chat_non_stream_no_tool(
@@ -156,7 +170,7 @@ async def refine_frame_prompt_from_previous_frame(
 
     if hasattr(response, "parsed") and response.parsed:
         parsed: FrameContinuityPromptResponse = response.parsed
-        return parsed.prompt
+        return parsed
 
     raise ValueError(f"Failed to parse continuity rewrite response: {response.content}")
 
