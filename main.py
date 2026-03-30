@@ -1,8 +1,16 @@
 import argparse
 import asyncio
+from collections.abc import Coroutine
+from typing import Any
 
-from src.commands import ask, chat_cli, handle_company_logo, handle_image_gen
-from src.constants import COMPANY_LOGO_COMMAND
+from src.commands import (
+    ask,
+    chat_cli,
+    handle_animation_generator,
+    handle_company_logo,
+    handle_image_gen,
+)
+from src.constants import ANIMATION_COMMAND, COMPANY_LOGO_COMMAND
 from src.ImageGen import DEFAULT_IMAGE_MODEL as DEFAULT_IMAGE_MODEL_ENUM
 from src.LLM import DEFAULT_MODEL, LLMConfig
 from src.minigames.company_logo.constants import (
@@ -73,6 +81,13 @@ def parse_args():
         "-np", "--negative-prompt", type=str, default=None, help="Negative prompt"
     )
 
+    # ANIMATION FRAME GENERATOR
+    subparsers.add_parser(
+        ANIMATION_COMMAND,
+        aliases=["anim"],
+        help="Start the interactive animation frame generator",
+    )
+
     # COMPANY LOGO MINIGAME
     comp_parser = subparsers.add_parser(
         COMPANY_LOGO_COMMAND, help="Start the company logo minigame"
@@ -94,17 +109,24 @@ def parse_args():
     return parser.parse_args()
 
 
+def _run_async(coroutine: Coroutine[Any, Any, object]) -> None:
+    try:
+        asyncio.run(coroutine)
+    except KeyboardInterrupt:
+        print("\nOperation cancelled.")
+
+
 def main():
     args = parse_args()
 
     if args.command == "ask":
         llm_config = LLMConfig(think=args.think) if args.think else None
-        asyncio.run(ask(args.question, args.model, args.stream, llm_config))
+        _run_async(ask(args.question, args.model, args.stream, llm_config))
     elif args.command == "chat":
         llm_config = LLMConfig(think=args.think) if args.think else None
-        asyncio.run(chat_cli(args.model, args.system, args.stream, llm_config))
+        _run_async(chat_cli(args.model, args.system, args.stream, llm_config))
     elif args.command == "img":
-        asyncio.run(
+        _run_async(
             handle_image_gen(
                 args.prompt,
                 args.model,
@@ -112,8 +134,10 @@ def main():
                 args.negative_prompt,
             )
         )
+    elif args.command in {ANIMATION_COMMAND, "anim"}:
+        _run_async(handle_animation_generator())
     elif args.command == COMPANY_LOGO_COMMAND:
-        asyncio.run(handle_company_logo(args.chat_model, args.prompt_model, args.image_model))
+        _run_async(handle_company_logo(args.chat_model, args.prompt_model, args.image_model))
     else:
         print(f"Unknown command: {args.command}")
 

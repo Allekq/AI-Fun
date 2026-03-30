@@ -1,3 +1,5 @@
+from src.LLM import DEFAULT_MODEL
+
 FIELD_COMPANY_NAME = "company_name"
 FIELD_INDUSTRY = "industry"
 FIELD_BRAND_PERSONALITY = "brand_personality"
@@ -18,7 +20,7 @@ FIELD_DO_NOT_USE = "do_not_use"
 LOGO_GOAL = "Gather the information necessary to generate a company logo that fits the user's desires and the company's nature."
 
 DEFAULT_CHAT_MODEL = "gemma"
-DEFAULT_PROMPT_MODEL = "qwen3:8b"
+DEFAULT_PROMPT_MODEL = DEFAULT_MODEL.value
 DEFAULT_IMAGE_MODEL = "x/flux2-klein:4b"
 
 TEST_SKIP_INFO_BOOK = False

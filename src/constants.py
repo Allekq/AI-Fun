@@ -1,1 +1,2 @@
+ANIMATION_COMMAND = "animation"
 COMPANY_LOGO_COMMAND = "comp"

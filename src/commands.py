@@ -14,6 +14,7 @@ from src.LLM import (
     chat_stream,
     get_model,
 )
+from src.minigames.animation_generator import run_animation_generator
 from src.minigames.company_logo import run_logo_minigame
 
 
@@ -136,3 +137,7 @@ async def handle_company_logo(
     image_model: str,
 ) -> None:
     await run_logo_minigame(chat_model, prompt_model, image_model)
+
+
+async def handle_animation_generator() -> None:
+    await run_animation_generator()

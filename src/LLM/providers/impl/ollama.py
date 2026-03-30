@@ -20,14 +20,17 @@ from ..base.utils import (
 
 class OllamaModels(Enum):
     QWEN_8B = "qwen3:8b"
+    QWEN_3_5_4B = "qwen3.5:4b"
+    QWEN_3_5_9B = "qwen3.5:9b"
     GLM_4_7_FLASH = "glm-4.7-flash"
     GEMMA_1B = "gemma3:1b"
+    GEMMA_4B = "gemma3:4b"
 
     def to_ollama_name(self) -> str:
         return self.value
 
 
-DEFAULT_MODEL = OllamaModels.QWEN_8B
+DEFAULT_MODEL = OllamaModels.GLM_4_7_FLASH
 
 
 def get_model(model_name: str) -> OllamaModels:
@@ -37,8 +40,8 @@ def get_model(model_name: str) -> OllamaModels:
     for m in OllamaModels:
         if model_name.lower() in m.to_ollama_name().lower():
             return m
-    print(f"ERROR - Model '{model_name}' not found, using default: {OllamaModels.QWEN_8B.value}")
-    return OllamaModels.QWEN_8B
+    print(f"ERROR - Model '{model_name}' not found, using default: {DEFAULT_MODEL.value}")
+    return DEFAULT_MODEL
 
 
 class OllamaProvider(BaseProvider):
