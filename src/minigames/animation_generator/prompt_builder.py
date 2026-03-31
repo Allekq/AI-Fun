@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from src.LLM import (
@@ -13,83 +15,81 @@ from src.LLM import (
 class AnimationFramePlan(BaseModel):
     frame_number: int = Field(ge=1)
     motion_beat: str = Field(min_length=1)
-    prompt: str = Field(min_length=1)
+    frame_prompt: str = Field(min_length=1)
 
 
 class AnimationPlanResponse(BaseModel):
     animation_summary: str = Field(min_length=1)
-    global_prompt: str = Field(min_length=1)
+    combined_prompt: str = Field(min_length=1)
     continuity_rules: list[str] = Field(min_length=1)
     frames: list[AnimationFramePlan] = Field(min_length=1)
 
 
-class FrameContinuityPromptResponse(BaseModel):
-    observed_subject: str = Field(min_length=1)
-    observed_background: str = Field(min_length=1)
-    observed_size_and_position: str = Field(min_length=1)
-    preserved_details: list[str] = Field(min_length=1)
-    target_change: str = Field(min_length=1)
-    prompt: str = Field(min_length=1)
+class FrameContinuityDecisionResponse(BaseModel):
+    action: Literal["ok", "override"]
+    reason: str = Field(min_length=1)
+    combined_prompt: str = ""
+    frame_prompt: str = ""
 
 
 REQUIRED_CONTINUITY_RULES = [
-    "Describe the same background in every prompt",
-    "Keep the same camera framing in every prompt",
-    "Keep the same lighting in every prompt",
+    "Keep the same subject identity, style, camera, background, lighting, and composition",
+    "Only change what the current beat requires",
+    "Keep one subject in one moment with no extra subjects or layouts",
+    "Preserve stable scene details unless the user explicitly asks for a change",
 ]
 
 
 SYSTEM_PROMPT = """You are an animation planning assistant for AI image generation.
-Break the user's request into a sequence of still-image prompts that feel like consecutive
-moments from one smooth animation.
+Create a production-style frame plan for one locked shot.
 
 Rules:
 - Return valid JSON that matches the provided schema.
 - Create exactly {frame_count} frames.
-- Keep the main subject, environment, lighting, camera framing, and visual style stable
-  unless the user explicitly asks for them to change.
-- Make motion and transformation progress smoothly from one frame to the next.
-- `global_prompt` should capture the stable visual anchor shared by every image prompt.
-- `global_prompt` must explicitly describe the stable background or environment that should stay
-  the same in every image.
-- Each frame `prompt` should be a standalone image-generation prompt for one single moment.
-- Each frame `prompt` must describe exactly one subject in its current state.
-- Each frame `prompt` must read like an isolated still image request, not like part of a set.
-- If the user's motion involves growth, expansion, blooming, spreading, or scaling, each frame
-  `prompt` must explicitly describe how large the subject appears on screen in that moment.
-- Each `motion_beat` should be a short label describing the key movement for that frame.
-- Do not mention frames, animation, sequence, timeline, stages, previous, next, progression,
-  transition, before, after, collage, panel, split-screen, storyboard, or multiple poses inside
-  `global_prompt` or any frame `prompt`.
-- Do not mention JSON, instructions, or negative-prompt wording inside the frame prompts.
-- `continuity_rules` must include keeping the same background, camera framing, and lighting.
+- Think step by step before answering, then return only the final JSON.
+- `combined_prompt` is the long shared prompt reused for every frame.
+- `combined_prompt` must be rich, detailed, and complete. It must describe the whole stable image:
+  subject identity, art direction, camera, background, lighting, composition, scale language,
+  palette, stable props, stable effects, and any other scene-wide details that should persist.
+- `combined_prompt` should read like a strong final prompt chunk, not notes or bullet points.
+- Each `frame_prompt` must describe only what is specific to that frame.
+- Each `frame_prompt` must be detailed, visual, literal, and exact about the current moment.
+- Each `frame_prompt` must describe the subject state, pose, silhouette, size in frame, position
+  in frame, intensity, and any motion result visible in that exact moment.
+- Make the motion progress in small deltas from frame to frame.
+- Keep the shot locked unless the user explicitly requests a camera or scene change.
+- The combined prompt handles stable style and scene information; the frame prompt handles the
+  exact moment-specific content.
+- Do not mention frames, animation, sequence, timeline, storyboard, previous, next, or JSON inside
+  `combined_prompt` or any `frame_prompt`.
+- `continuity_rules` must include the required continuity rules.
 
 User negative prompt context:
 {negative_prompt_context}
 """
 
-CONTINUITY_REWRITE_SYSTEM_PROMPT = """You are refining an image-generation prompt using a
-reference image from the immediately previous moment in a sequence.
+
+CONTINUITY_REWRITE_SYSTEM_PROMPT = """You are a continuity supervisor for AI image generation.
+You review the base prompts for the next frame and decide whether they are still good enough.
 
 Rules:
 - Return valid JSON matching the schema.
-- Inspect the image carefully and describe literal visible traits instead of vague summaries.
-- Pay special attention to: silhouette, number of tips or lobes, softness or sharpness of edges,
-  glow or halo, brightness, palette, subject position, subject size relative to the canvas,
-  contact with the ground plane, reflections or shadows, and how much empty space surrounds it.
-- Preserve the same background, camera framing, lighting, palette, and subject identity from the
-  reference image unless the target moment explicitly changes one of those.
-- Advance the subject only slightly toward the target moment.
-- Describe exactly one clear subject in one isolated still image.
-- If the target moment involves growth, expansion, or ignition, explicitly describe how large the
-  subject appears in the frame now, and describe the new size in concrete on-screen terms.
-- In `target_change`, explain the exact incremental change from the reference image to the new
-  image, especially for size, height, width, or flame intensity.
-- In `prompt`, restate the important preserved visual traits from the reference image so the next
-  model does not have to infer them.
-- Do not mention the reference image, previous frame, sequence, animation, timeline, collage,
-  storyboard, split-screen, or multiple poses.
-- Do not invent extra subjects or decorative elements that are not visible or requested.
+- Think step by step before answering, then return only the final JSON.
+- `action` must be either `ok` or `override`.
+- If `action` is `ok`, leave `combined_prompt` and `frame_prompt` empty and explain briefly in
+  `reason` why the base prompts are already good enough.
+- If `action` is `override`, provide a complete replacement `combined_prompt` and a complete
+  replacement `frame_prompt`.
+- Any override must fully replace the prompts. Do not return partial edits, diff instructions,
+  comments like "same as before", or patch-style notes.
+- If two images are attached, image 1 is the canonical anchor frame for stable identity and image
+  2 is the immediately previous frame for local continuity.
+- Use the anchor image to keep stable identity, shot, and scene details locked.
+- Use the previous frame to preserve the local motion handoff.
+- Override only when the base prompts would likely drift or miss important visible continuity.
+- When overriding, keep the shared stable description in `combined_prompt` and keep the exact
+  moment-specific description in `frame_prompt`.
+- Do not invent extra subjects, extra props, or new camera moves unless requested.
 """
 
 
@@ -113,7 +113,7 @@ async def build_animation_plan(
             ),
             HumanMessage(content=f"Main animation request: {main_prompt}"),
         ],
-        llm_config=LLMConfig(format=AnimationPlanResponse),
+        llm_config=LLMConfig(format=AnimationPlanResponse, think=True),
     )
 
     if hasattr(response, "parsed") and response.parsed:
@@ -126,14 +126,14 @@ async def build_animation_plan(
             AnimationFramePlan(
                 frame_number=index + 1,
                 motion_beat=frame.motion_beat,
-                prompt=frame.prompt,
+                frame_prompt=frame.frame_prompt,
             )
             for index, frame in enumerate(parsed.frames)
         ]
         normalized_rules = list(dict.fromkeys([*parsed.continuity_rules, *REQUIRED_CONTINUITY_RULES]))
         return AnimationPlanResponse(
             animation_summary=parsed.animation_summary,
-            global_prompt=parsed.global_prompt,
+            combined_prompt=parsed.combined_prompt,
             continuity_rules=normalized_rules,
             frames=normalized_frames,
         )
@@ -142,13 +142,19 @@ async def build_animation_plan(
 
 
 async def refine_frame_prompt_from_previous_frame(
-    global_prompt: str,
+    combined_prompt: str,
     frame_prompt: str,
     motion_beat: str,
     previous_frame_path: str,
+    anchor_frame_path: str | None,
     model: OllamaModels,
-) -> FrameContinuityPromptResponse:
+) -> FrameContinuityDecisionResponse:
     provider = OllamaProvider(model)
+    reference_images = (
+        [anchor_frame_path, previous_frame_path]
+        if anchor_frame_path is not None
+        else [previous_frame_path]
+    )
 
     response = await chat_non_stream_no_tool(
         provider=provider,
@@ -156,20 +162,22 @@ async def refine_frame_prompt_from_previous_frame(
             SystemMessage(content=CONTINUITY_REWRITE_SYSTEM_PROMPT),
             HumanMessage(
                 content=(
-                    f"Stable scene anchor: {global_prompt}\n"
+                    "Reference usage:\n"
+                    "- If two images are attached, image 1 is the canonical anchor frame.\n"
+                    "- If two images are attached, image 2 is the immediately previous frame.\n"
+                    f"Base combined prompt: {combined_prompt}\n"
+                    f"Base frame prompt: {frame_prompt}\n"
                     f"Target motion beat: {motion_beat}\n"
-                    f"Target moment prompt: {frame_prompt}\n"
-                    "Rewrite the next image prompt so it keeps the same scene and advances only to "
-                    "this target moment."
+                    "Decide whether the prompts should stay as-is or be fully replaced."
                 ),
-                images=[previous_frame_path],
+                images=reference_images,
             ),
         ],
-        llm_config=LLMConfig(format=FrameContinuityPromptResponse),
+        llm_config=LLMConfig(format=FrameContinuityDecisionResponse, think=True),
     )
 
     if hasattr(response, "parsed") and response.parsed:
-        parsed: FrameContinuityPromptResponse = response.parsed
+        parsed: FrameContinuityDecisionResponse = response.parsed
         return parsed
 
     raise ValueError(f"Failed to parse continuity rewrite response: {response.content}")
@@ -210,19 +218,19 @@ def build_fallback_animation_plan(
             AnimationFramePlan(
                 frame_number=index + 1,
                 motion_beat=phase,
-                prompt=(
-                    f"{main_prompt}. The subject is captured in the {phase}, shown as a single "
-                    f"clear subject that appears {size_description}, with the same background, "
-                    "camera angle, and lighting."
+                frame_prompt=(
+                    f"The subject is shown in the {phase}. It appears {size_description}, remains "
+                    "the only subject in the shot, and is described in exact visual terms for this "
+                    "moment only."
                 ),
             )
         )
 
     return AnimationPlanResponse(
         animation_summary=f"Fallback animation plan for: {main_prompt}",
-        global_prompt=(
-            f"{main_prompt}. Use the same fixed background, composition, camera framing, "
-            "lighting, and visual style in every image."
+        combined_prompt=(
+            f"{main_prompt}. Keep one locked shot with the same subject identity, background, "
+            "camera, lighting, composition, and stable scene details in every image."
         ),
         continuity_rules=list(
             dict.fromkeys(
